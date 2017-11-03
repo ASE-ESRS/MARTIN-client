@@ -1,9 +1,16 @@
 language: android
+
+jdk:
+  # Jdk version used by your project
+  - oraclejdk8
+
+sudo: false
+
 android:
   components:
-    - tools # to get the new `repository-11.xml`
-    - tools # see https://github.com/travis-ci/travis-ci/issues/6040#issuecomment-219367943)
     - platform-tools
+    - tools
+    # The BuildTools version used by your project
     - build-tools-25.0.2
     - android-25
     - extra-android-m2repository
@@ -11,14 +18,29 @@ android:
     - extra-android-support
     - extra-google-google_play_services
       # Specify at least one system image, if you need to run emulator(s) during your tests
-    - sys-img-armeabi-v7a-android-21
+    - sys-img-armeabi-v7a-android-24
+
+notifications:
+  email: false
+
+before_cache:
+  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+
+# cache between builds
+cache:
+  directories:
+  - $HOME/.m2
+  - $HOME/.gradle/caches/
+  - $HOME/.gradle/wrapper/
+
 install:
-  - echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2"
-  - echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.2"
+  # Check install section: http://docs.travis-ci.com/user/build-configuration/#install
+  # If you'd like to skip the install stage entirely, set it to true and nothing will be run.
+  - true
+
 before_script:
-  - echo no | android create avd --force -n test -t android-21 --abi armeabi-v7a
-  - emulator -avd test -no-skin -no-audio -no-window &
-  - android-wait-for-emulator
-  - adb shell input keyevent 82 &
-script:
-   - ./gradlew build connectedCheck
+    - chmod +x gradlew
+    - echo no | android create avd --force --name test --target android-24 --abi armeabi-v7a
+    - emulator -avd test -no-skin -no-audio -no-window -no-boot-anim &
+    - android-wait-for-emulator
+    - adb shell input keyevent 82 &
