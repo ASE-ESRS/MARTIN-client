@@ -21,16 +21,6 @@ android:
       # Specify at least one system image, if you need to run emulator(s) during your tests
     - sys-img-armeabi-v7a-google_apis-21
     - sys-img-armeabi-v7a-google_apis-25
-    
-before_cache:
-  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
-
-# cache between builds
-cache:
-  directories:
-  - $HOME/.m2
-  - $HOME/.gradle/caches/
-  - $HOME/.gradle/wrapper/
 
 install:
   # Check install section: http://docs.travis-ci.com/user/build-configuration/#install
