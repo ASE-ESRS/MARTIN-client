@@ -20,9 +20,8 @@ android:
     - sys-img-armeabi-v7a-google_apis-25
 
 install:
-  # Check install section: http://docs.travis-ci.com/user/build-configuration/#install
-  # If you'd like to skip the install stage entirely, set it to true and nothing will be run.
-  - true
+  - echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2"
+  - echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.2"
 
 before_script:
     - echo no | android create avd --force --name test --target android-25 --abi google_apis/armeabi-v7a
