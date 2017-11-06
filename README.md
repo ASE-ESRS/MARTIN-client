@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/ASE-ESRS/MARTIN-client.svg?branch=master)](https://travis-ci.org/ASE-ESRS/MARTIN-client)
 [![Coverage Status](https://coveralls.io/repos/github/ASE-ESRS/MARTIN-client/badge.svg?branch=master)](https://coveralls.io/github/ASE-ESRS/MARTIN-client?branch=master)
+[![Maintainability](https://api.codeclimate.com/v1/badges/b7152bb4a4640d4ed557/maintainability)](https://codeclimate.com/github/DanielArthurUK/MARTIN-client/maintainability)
 
 ## Introduction
 This repository holds the code and documentation for the client-side material developed as part **947G5 Advanced Software Engineering** Task 4.
