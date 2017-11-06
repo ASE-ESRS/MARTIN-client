@@ -129,7 +129,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 @Override
                 public void onResponse(JSONObject response) {
                     try{
-                        Log.d("Martins Map", (String) response.get("message"));
                         if(((String) response.get("status")).equals("success")) {
                             Toast.makeText(MainActivity.this, "Location successfully sent to server.", Toast.LENGTH_SHORT).show();
                         } else {
@@ -137,13 +136,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     } catch(JSONException ex) {
                         Toast.makeText(MainActivity.this, "Location could not be sent to the server.", Toast.LENGTH_SHORT).show();
-                        Log.e("Martins Map", ex.getMessage());
                     }
                 }
             }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    Log.e("Martins Map", error.getMessage());
                     Toast.makeText(MainActivity.this, "Location could not be sent to the server.", Toast.LENGTH_SHORT).show();
                 }
             });
