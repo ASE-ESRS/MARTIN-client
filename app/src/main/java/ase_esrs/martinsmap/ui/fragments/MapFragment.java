@@ -88,7 +88,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
                 buildGoogleApiClient();
             } else {
                 //Request Permissions
-                checkLocationPermission();
+                checkPermission(LOCATION_PERMISSION, Manifest.permission.ACCESS_FINE_LOCATION);
             }
         }
         else {
@@ -109,7 +109,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     public void onConnected(Bundle bundle) {
         queue = Volley.newRequestQueue(getActivity());
         userId = Secure.getString(getActivity().getContentResolver(), Secure.ANDROID_ID);
-        checkInternetPermission();
+        checkPermission(INTERNET_PERMISSION, Manifest.permission.INTERNET);
 
         LocationRequest mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(10000);
@@ -154,58 +154,30 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
         updateServer();
     }
 
-    private void checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
+    private void checkPermission(final int permissionConstant, final String manifestPermissionConstant) {
+        if(ContextCompat.checkSelfPermission(getActivity(), manifestPermissionConstant)
                 != PackageManager.PERMISSION_GRANTED) {
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
-                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    manifestPermissionConstant)) {
 
                 new AlertDialog.Builder(getActivity())
-                        .setTitle("Location Permission Needed")
-                        .setMessage("This app needs the Location permission, please accept to use location functionality.")
+                        .setTitle("Permission Needed")
+                        .setMessage("This app needs the "+manifestPermissionConstant+" permission, please accept to use related functionality.")
                         .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 ActivityCompat.requestPermissions(getActivity(),
-                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                                        LOCATION_PERMISSION );
+                                        new String[]{manifestPermissionConstant},
+                                        permissionConstant);
                             }
                         })
                         .create()
                         .show();
             } else {
                 ActivityCompat.requestPermissions(getActivity(),
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        LOCATION_PERMISSION );
-            }
-        }
-    }
-
-    private void checkInternetPermission() {
-        if(ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.INTERNET)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
-                    Manifest.permission.INTERNET)) {
-
-                new AlertDialog.Builder(getActivity())
-                        .setTitle("Internet Permission Needed")
-                        .setMessage("This app needs the Internet permission, please accept to use heat map functionality.")
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                ActivityCompat.requestPermissions(getActivity(),
-                                        new String[]{Manifest.permission.INTERNET},
-                                        INTERNET_PERMISSION );
-                            }
-                        })
-                        .create()
-                        .show();
-            } else {
-                ActivityCompat.requestPermissions(getActivity(),
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        LOCATION_PERMISSION );
+                        new String[]{manifestPermissionConstant},
+                        permissionConstant);
             }
 
         }
