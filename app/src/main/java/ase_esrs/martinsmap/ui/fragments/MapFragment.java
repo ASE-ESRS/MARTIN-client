@@ -53,6 +53,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     private RequestQueue queue;
     private String userId;
     private final static String SERVER_URI = "https://kvtlsm9uye.execute-api.eu-west-2.amazonaws.com/prod/HandleLocationUpdate";
+    private boolean foundLocation = false;
 
     @Override
     public void onResume() {
@@ -78,7 +79,6 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
-
         //Initialize Google Play Services
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(getActivity(),
@@ -86,15 +86,13 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
                     == PackageManager.PERMISSION_GRANTED) {
                 //Location Permission already granted
                 buildGoogleApiClient();
-                mGoogleMap.setMyLocationEnabled(true);
             } else {
-                //Request Location Permission
+                //Request Permissions
                 checkLocationPermission();
             }
         }
         else {
             buildGoogleApiClient();
-            mGoogleMap.setMyLocationEnabled(true);
         }
     }
 
@@ -111,6 +109,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     public void onConnected(Bundle bundle) {
         queue = Volley.newRequestQueue(getActivity());
         userId = Secure.getString(getActivity().getContentResolver(), Secure.ANDROID_ID);
+        checkInternetPermission();
 
         LocationRequest mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(10000);
@@ -131,6 +130,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
 
     @Override
     public void onLocationChanged(Location location) {
+        Log.i("Martin's Maps", "Location Updated");
         mLastLocation = location;
         if (mCurrLocationMarker != null) {
             mCurrLocationMarker.remove();
@@ -138,33 +138,35 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
 
         //Place current location marker
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+
+        if(!foundLocation) {
+            //move map camera
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,15));
+            foundLocation = true;
+        }
+
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
         markerOptions.title("Current Position");
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
         mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
 
-        //move map camera
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,15));
         updateServer();
-
     }
 
     private void checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
 
-            // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
 
                 new AlertDialog.Builder(getActivity())
                         .setTitle("Location Permission Needed")
-                        .setMessage("This app needs the Location permission, please accept to use location functionality")
+                        .setMessage("This app needs the Location permission, please accept to use location functionality.")
                         .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                //Prompt the user once explanation has been shown
                                 ActivityCompat.requestPermissions(getActivity(),
                                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                                         LOCATION_PERMISSION );
@@ -172,13 +174,40 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
                         })
                         .create()
                         .show();
-
-
             } else {
                 ActivityCompat.requestPermissions(getActivity(),
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         LOCATION_PERMISSION );
             }
+        }
+    }
+
+    private void checkInternetPermission() {
+        if(ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.INTERNET)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
+                    Manifest.permission.INTERNET)) {
+
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("Internet Permission Needed")
+                        .setMessage("This app needs the Internet permission, please accept to use heat map functionality.")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                ActivityCompat.requestPermissions(getActivity(),
+                                        new String[]{Manifest.permission.INTERNET},
+                                        INTERNET_PERMISSION );
+                            }
+                        })
+                        .create()
+                        .show();
+            } else {
+                ActivityCompat.requestPermissions(getActivity(),
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        LOCATION_PERMISSION );
+            }
+
         }
     }
 
@@ -216,34 +245,28 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     }
 
     private void updateServer() {
-        if(ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{Manifest.permission.INTERNET},
-                    INTERNET_PERMISSION);
-        } else {
-            String requestUrl = SERVER_URI+"?latitude="+mLastLocation.getLatitude()+"&longitude="+mLastLocation.getLongitude()+"&userId="+userId;
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, requestUrl, null, new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    try{
-                        if(response.get("status").equals("success")) {
+        String requestUrl = SERVER_URI+"?latitude="+mLastLocation.getLatitude()+"&longitude="+mLastLocation.getLongitude()+"&userId="+userId;
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, requestUrl, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try{
+                    if(response.get("status").equals("success")) {
 
-                        } else {
-                            Log.e("Martin's Maps", (String) response.get("message"));
-                        }
-                    } catch(JSONException ex) {
-                        Log.e("Martin's Maps", ex.getMessage());
+                    } else {
+                        Log.e("Martin's Maps", (String) response.get("message"));
                     }
+                } catch(JSONException ex) {
+                    Log.e("Martin's Maps", ex.getMessage());
                 }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.e("Martin's Maps", error.getMessage());
-                }
-            });
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("Martin's Maps", error.getMessage());
+            }
+        });
 
-            queue.add(jsonObjectRequest);
-        }
+        queue.add(jsonObjectRequest);
     }
 
 }
