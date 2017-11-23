@@ -13,14 +13,20 @@ public class PersistentStorageManager {
     private int sliderValue = 1;
 
     /**
-     * Saves the supplied slider value (0 - 5) to persistent storage.
+     * Saves the supplied slider value (0 - 4) to persistent storage.
      */
-    public void saveSliderValue(int sliderValue) {
-        this.sliderValue = sliderValue;
+    public void setSliderValue(int sliderValue) {
+        // Ensure we've been passed a valid slider value.
+        if (sliderValue >= 0 && sliderValue <= 4) {
+            this.sliderValue = sliderValue;
+        } else {
+            // Otherwise, switch to the default.
+            this.sliderValue = 1;
+        }
     }
 
     /**
-     * Loads the search radius value (0 - 5) from persistent storage.
+     * Loads the search radius value (0 - 4) from persistent storage.
      */
     public int getSliderValue() {
         return sliderValue;

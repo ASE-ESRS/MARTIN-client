@@ -70,7 +70,7 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 // Update Search Radius button pressed.
-                PersistentStorageManager.sharedInstance.saveSliderValue(seekBar.getProgress());
+                PersistentStorageManager.sharedInstance.setSliderValue(seekBar.getProgress());
                 updateSearchRadiusTextView();
             }
 
