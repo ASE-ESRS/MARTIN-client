@@ -3,6 +3,7 @@ package ase_esrs.martinsmap.ui.activities;
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
 import android.app.Fragment;
+import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -31,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
         toolbar = (Toolbar) findViewById(R.id.my_toolbar);
         toolbar.setTitle("Martin's Map");
         toolbar.setTitleTextColor(Color.WHITE);
-        toolbar.setBackgroundColor(Color.rgb(200,0,200));
+        toolbar.setBackgroundColor(Color.rgb(103,58,183));
         setSupportActionBar(toolbar);
 
         mapsFragment = new MapFragment();
@@ -66,8 +67,13 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
-            Log.i("Martin's Map", "SETTINGS CLICKED!");
+            presentSettingsActivity();
         }
+
         return super.onOptionsItemSelected(item);
+    }
+
+    protected void presentSettingsActivity() {
+        MainActivity.this.startActivity(new Intent(MainActivity.this, SettingsActivity.class));
     }
 }
