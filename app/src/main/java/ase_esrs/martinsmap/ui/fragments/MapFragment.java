@@ -151,7 +151,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
         mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
 
-        updateServer();
+//        updateServer();
     }
 
     private void checkPermission(final int permissionConstant, final String manifestPermissionConstant) {
