@@ -8,6 +8,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import ase_esrs.martinsmap.R;
+import util.PersistentStorageManager;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -41,19 +42,26 @@ public class SettingsActivity extends AppCompatActivity {
         setupSeekBarListener();
     }
 
+    // Sets the text of the search radius label appropriately.
     protected void updateSearchRadiusTextView() {
         int sliderValue = PersistentStorageManager.sharedInstance.getSliderValue();
+
         switch (sliderValue) {
             case 0:
                 searchRadiusTextView.setText("50m");
+                break;
             case 1:
                 searchRadiusTextView.setText("5km");
+                break;
             case 2:
                 searchRadiusTextView.setText("10km");
+                break;
             case 3:
                 searchRadiusTextView.setText("15km");
+                break;
             default:
                 searchRadiusTextView.setText("20km");
+                break;
         }
     }
 

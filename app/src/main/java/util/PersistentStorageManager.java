@@ -1,4 +1,4 @@
-package ase_esrs.martinsmap.ui.activities;
+package util;
 
 /**
  * Handles the saving and loading of preferences (such as the search radius).
