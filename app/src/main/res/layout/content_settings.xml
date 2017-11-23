@@ -20,8 +20,8 @@
             android:id="@+id/imageView"
             android:layout_width="match_parent"
             android:layout_height="43dp"
-            android:layout_marginTop="35dp"
-            app:srcCompat="@mipmap/ic_launcher"/>
+            android:layout_marginTop="30dp"
+            app:srcCompat="@mipmap/ic_launcher" />
 
         <TextView
             android:id="@+id/textView"
@@ -30,27 +30,30 @@
             android:layout_marginBottom="8dp"
             android:layout_marginTop="20dp"
             android:text="Please select your desired search radius"
-            android:textAlignment="center"/>
+            android:textAlignment="center"
+            android:textSize="17sp" />
 
         <SeekBar
             android:id="@+id/seekBar"
             style="@style/Widget.AppCompat.SeekBar.Discrete"
             android:layout_width="match_parent"
-            android:layout_marginLeft="6dp"
-            android:layout_marginRight="12dp"
             android:layout_height="33dp"
-            android:max="20"
-            android:progress="10"/>
-
-        <Button
-            android:id="@+id/saveRadiusButton"
-            android:backgroundTint="@color/colorPrimary"
-            android:textColor="#FFFFFF"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:layout_marginLeft="6dp"
             android:layout_marginRight="12dp"
-            android:text="Update Search Radius"/>
+            android:max="4"
+            android:progress="2" />
+
+        <TextView
+            android:id="@+id/searchRadiusTextView"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="20dp"
+            android:text="1000m"
+            android:textAlignment="center"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
 
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
