@@ -10,9 +10,12 @@ import static org.junit.Assert.*;
  * Created by danny on 23/11/2017.
  */
 public class MapFragmentTest {
+
+    MapFragment mapFragment;
+
     @Before
     public void setUp() throws Exception {
-
+        mapFragment = new MapFragment();
     }
 
     @After
@@ -37,6 +40,11 @@ public class MapFragmentTest {
 
     @Test
     public void buildGoogleApiClient() throws Exception {
+
+    }
+
+    @Test
+    public void setUpMapIfNeeded() throws Exception {
 
     }
 

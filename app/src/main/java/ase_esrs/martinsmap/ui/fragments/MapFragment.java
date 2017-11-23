@@ -1,9 +1,12 @@
 package ase_esrs.martinsmap.ui.fragments;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
@@ -33,9 +36,18 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.maps.android.heatmaps.HeatmapTileProvider;
+import com.google.maps.android.heatmaps.HeatmapTileProvider.Builder;
+import com.google.maps.android.heatmaps.WeightedLatLng;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+
+import util.Prices;
 
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
 import static ase_esrs.martinsmap.ui.Permissions.LOCATION_PERMISSION;
@@ -46,14 +58,14 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
                 GoogleApiClient.OnConnectionFailedListener,
                 LocationListener {
 
-    private GoogleMap mGoogleMap;
-    private GoogleApiClient mGoogleApiClient;
-    private Location mLastLocation;
-    private Marker mCurrLocationMarker;
-    private RequestQueue queue;
-    private String userId;
-    private final static String SERVER_URI = "https://kvtlsm9uye.execute-api.eu-west-2.amazonaws.com/prod/HandleLocationUpdate";
-    private boolean foundLocation = false;
+    private final static String SERVER_URI = "https://4wmuzhlr5b.execute-api.eu-west-2.amazonaws.com/prod/martinServer";
+
+    GoogleMap mGoogleMap;
+    GoogleApiClient mGoogleApiClient;
+    Location mLastLocation;
+    Marker mCurrLocationMarker;
+    RequestQueue queue;
+    boolean foundLocation = false;
 
     @Override
     public void onResume() {
@@ -61,7 +73,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
         setUpMapIfNeeded();
     }
 
-    private void setUpMapIfNeeded() {
+    public void setUpMapIfNeeded() {
         if (mGoogleMap == null) {
             getMapAsync(this);
         }
@@ -108,12 +120,11 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     @Override
     public void onConnected(Bundle bundle) {
         queue = Volley.newRequestQueue(getActivity());
-        userId = Secure.getString(getActivity().getContentResolver(), Secure.ANDROID_ID);
         checkPermission(INTERNET_PERMISSION, Manifest.permission.INTERNET);
 
         LocationRequest mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(10000);
+        mLocationRequest.setInterval(30000);
+        mLocationRequest.setFastestInterval(30000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
         if (ContextCompat.checkSelfPermission(getActivity(),
                 Manifest.permission.ACCESS_FINE_LOCATION)
@@ -148,7 +159,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
         markerOptions.title("Current Position");
-        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
         mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
 
         updateServer();
@@ -217,28 +228,45 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     }
 
     private void updateServer() {
-        String requestUrl = SERVER_URI+"?latitude="+mLastLocation.getLatitude()+"&longitude="+mLastLocation.getLongitude()+"&userId="+userId;
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, requestUrl, null, new Response.Listener<JSONObject>() {
+        Toast.makeText(getActivity(), "Finding Price Paid Data...", Toast.LENGTH_SHORT).show();
+        String requestUrl = SERVER_URI+"?latitude="+mLastLocation.getLatitude()+"&longitude="+mLastLocation.getLongitude()+"&distance=500";
+        Log.d("Martin's Map", requestUrl);
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.POST, requestUrl, null, new Response.Listener<JSONArray>() {
             @Override
-            public void onResponse(JSONObject response) {
-                try{
-                    if(response.get("status").equals("success")) {
-
-                    } else {
-                        Log.e("Martin's Maps", (String) response.get("message"));
-                    }
-                } catch(JSONException ex) {
-                    Log.e("Martin's Maps", ex.getMessage());
-                }
+            public void onResponse(JSONArray response) {
+                addHeatMap(response);
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e("Martin's Maps", error.getMessage());
+                Log.e("Martin's Maps", "A network error occurred: "+error.toString());
+                Toast.makeText(getActivity(), "Network error occurred", Toast.LENGTH_SHORT).show();
             }
         });
+        jsonArrayRequest.setRetryPolicy(new DefaultRetryPolicy(20000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        queue.add(jsonArrayRequest);
+    }
 
-        queue.add(jsonObjectRequest);
+    private void addHeatMap(JSONArray array) {
+        try {
+            if(array.length() == 0) {
+                Toast.makeText(getActivity(), "No price paid data available", Toast.LENGTH_SHORT).show();
+            } else {
+                ArrayList<WeightedLatLng> locations = new ArrayList<>();
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject obj = array.getJSONObject(i);
+                    LatLng loc = new LatLng(obj.getDouble("latitude"), obj.getDouble("longitude"));
+                    double weight = Prices.priceIntensity(obj.getInt("price"));
+                    locations.add(new WeightedLatLng(loc, weight));
+                }
+                HeatmapTileProvider tileProvider = new Builder().weightedData(locations).build();
+                mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));
+            }
+        } catch(JSONException ex) {
+            Log.e("Martin's Maps", ex.getMessage());
+        }
     }
 
 }
