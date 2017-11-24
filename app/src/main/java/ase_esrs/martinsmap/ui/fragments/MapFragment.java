@@ -47,6 +47,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import util.PersistentStorageManager;
 import util.Prices;
 
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
@@ -162,7 +163,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
         mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
 
-//        updateServer();
+        updateServer();
     }
 
     private void checkPermission(final int permissionConstant, final String manifestPermissionConstant) {
@@ -228,8 +229,32 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     }
 
     private void updateServer() {
-        Toast.makeText(getActivity(), "Finding Price Paid Data...", Toast.LENGTH_SHORT).show();
-        String requestUrl = SERVER_URI+"?latitude="+mLastLocation.getLatitude()+"&longitude="+mLastLocation.getLongitude()+"&distance=500";
+
+        int sliderValue = PersistentStorageManager.sharedInstance.getSliderValue();
+        int radius;
+        switch(sliderValue) {
+            case 0:
+                radius = 50;
+                break;
+            case 1:
+                radius = 5000;
+                break;
+            case 2:
+                radius = 10000;
+                break;
+            case 3:
+                radius = 15000;
+                break;
+            case 4:
+                radius = 20000;
+                break;
+            default:
+                radius = 5000;
+                break;
+        }
+
+        Toast.makeText(getActivity(), "Finding Price Paid Data...", Toast.LENGTH_LONG).show();
+        String requestUrl = SERVER_URI+"?latitude="+mLastLocation.getLatitude()+"&longitude="+mLastLocation.getLongitude()+"&distance="+radius;
         Log.d("Martin's Map", requestUrl);
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.POST, requestUrl, null, new Response.Listener<JSONArray>() {
             @Override
