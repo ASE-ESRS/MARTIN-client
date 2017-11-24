@@ -19,7 +19,8 @@ public class PersistentStorageManagerTest {
 
     @Test
     public void testPersistentStorageManager() {
-        assertEquals(manager.getSliderValue(), 1);
+        PersistentStorageManager psm = new PersistentStorageManager();
+        assertTrue(psm instanceof PersistentStorageManager);
     }
 
     @Test
