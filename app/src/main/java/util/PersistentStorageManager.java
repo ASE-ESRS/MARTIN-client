@@ -32,4 +32,21 @@ public class PersistentStorageManager {
         return sliderValue;
     }
 
+    public int getSearchRadiusInMeters() {
+        switch(sliderValue) {
+            case 0:
+                return 50;
+            case 1:
+                return 5000;
+            case 2:
+                return 10000;
+            case 3:
+                return 15000;
+            case 4:
+                return 20000;
+            default:
+                return 5000;
+        }
+    }
+
 }

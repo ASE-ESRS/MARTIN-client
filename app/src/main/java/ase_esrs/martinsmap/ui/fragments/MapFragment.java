@@ -4,10 +4,8 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
-import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -19,7 +17,6 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings.Secure;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -229,29 +226,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     }
 
     private void updateServer() {
-
-        int sliderValue = PersistentStorageManager.sharedInstance.getSliderValue();
-        int radius;
-        switch(sliderValue) {
-            case 0:
-                radius = 50;
-                break;
-            case 1:
-                radius = 5000;
-                break;
-            case 2:
-                radius = 10000;
-                break;
-            case 3:
-                radius = 15000;
-                break;
-            case 4:
-                radius = 20000;
-                break;
-            default:
-                radius = 5000;
-                break;
-        }
+        int radius = PersistentStorageManager.sharedInstance.getSliderValue();
 
         Toast.makeText(getActivity(), "Finding Price Paid Data...", Toast.LENGTH_LONG).show();
         String requestUrl = SERVER_URI+"?latitude="+mLastLocation.getLatitude()+"&longitude="+mLastLocation.getLongitude()+"&distance="+radius;
