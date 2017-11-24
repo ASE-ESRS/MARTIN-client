@@ -4,10 +4,8 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
-import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -19,7 +17,6 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings.Secure;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -47,6 +44,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import util.PersistentStorageManager;
 import util.Prices;
 
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
@@ -228,8 +226,10 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     }
 
     private void updateServer() {
-        Toast.makeText(getActivity(), "Finding Price Paid Data...", Toast.LENGTH_SHORT).show();
-        String requestUrl = SERVER_URI+"?latitude="+mLastLocation.getLatitude()+"&longitude="+mLastLocation.getLongitude()+"&distance=500";
+        int radius = PersistentStorageManager.sharedInstance.getSliderValue();
+
+        Toast.makeText(getActivity(), "Finding Price Paid Data...", Toast.LENGTH_LONG).show();
+        String requestUrl = SERVER_URI+"?latitude="+mLastLocation.getLatitude()+"&longitude="+mLastLocation.getLongitude()+"&distance="+radius;
         Log.d("Martin's Map", requestUrl);
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.POST, requestUrl, null, new Response.Listener<JSONArray>() {
             @Override
