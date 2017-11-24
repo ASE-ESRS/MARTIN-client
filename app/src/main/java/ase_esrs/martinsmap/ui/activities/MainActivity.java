@@ -14,6 +14,7 @@ import android.view.MenuItem;
 
 import ase_esrs.martinsmap.R;
 import ase_esrs.martinsmap.ui.fragments.MapFragment;
+import util.PersistentStorageManager;
 
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
 import static ase_esrs.martinsmap.ui.Permissions.LOCATION_PERMISSION;
@@ -21,7 +22,6 @@ import static ase_esrs.martinsmap.ui.Permissions.LOCATION_PERMISSION;
 public class MainActivity extends AppCompatActivity {
 
     private MapFragment mapsFragment;
-
     private Toolbar toolbar;
 
     @Override
