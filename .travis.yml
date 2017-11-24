@@ -32,4 +32,4 @@ before_script:
 script:
     - ./gradlew test
     - ./gradlew connectedAndroidTest
-    - ./gradlew connectedAndroidTest coveralls
+    - ./gradlew test coveralls
