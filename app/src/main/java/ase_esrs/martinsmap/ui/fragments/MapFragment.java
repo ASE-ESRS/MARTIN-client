@@ -256,10 +256,18 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
                 Toast.makeText(getActivity(), "No price paid data available", Toast.LENGTH_SHORT).show();
             } else {
                 ArrayList<WeightedLatLng> locations = new ArrayList<>();
+                int max = array.getJSONObject(0).getInt("price");
+                int min = array.getJSONObject(0).getInt("price");
+                for (int i = 1; i < array.length(); i++) { //Retrieves max and min price values
+                    int currprice = array.getJSONObject(i).getInt("price");
+                    if (currprice > max) {
+                        max = currprice;
+                    } else if (currprice < min) min = currprice;
+                }
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject obj = array.getJSONObject(i);
                     LatLng loc = new LatLng(obj.getDouble("latitude"), obj.getDouble("longitude"));
-                    double weight = Prices.priceIntensity(obj.getInt("price"));
+                    double weight = Prices.priceIntensity(obj.getInt("price")); //TODO: add if statement here whether to pass max and min to Prices.priceIntensity depending on scale slider setting
                     locations.add(new WeightedLatLng(loc, weight));
                 }
                 HeatmapTileProvider tileProvider = new Builder().weightedData(locations).build();
