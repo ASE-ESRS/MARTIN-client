@@ -13,10 +13,13 @@ import com.google.android.gms.location.LocationListener;
 
 import android.Manifest;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -44,7 +47,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import util.PersistentStorageManager;
+import ase_esrs.martinsmap.ui.activities.MainActivity;
+import ase_esrs.martinsmap.ui.activities.SettingsActivity;
 import util.Prices;
 
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
@@ -100,8 +104,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
                 //Request Permissions
                 checkPermission(LOCATION_PERMISSION, Manifest.permission.ACCESS_FINE_LOCATION);
             }
-        }
-        else {
+        } else {
             buildGoogleApiClient();
         }
     }
@@ -226,7 +229,10 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     }
 
     private void updateServer() {
-        int radius = PersistentStorageManager.sharedInstance.getSearchRadiusInMeters();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.applicationContext);
+        String radiusString = prefs.getString("radius", "50");
+
+        int radius = Integer.parseInt(radiusString);
 
         Toast.makeText(getActivity(), "Finding Price Paid Data...", Toast.LENGTH_LONG).show();
         String requestUrl = SERVER_URI+"?latitude="+mLastLocation.getLatitude()+"&longitude="+mLastLocation.getLongitude()+"&distance="+radius;

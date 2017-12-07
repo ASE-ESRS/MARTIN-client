@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="Settings">
+
+        <ListPreference
+            android:key="radius"
+            android:title="Search Radius"
+            android:summary="%s"
+            android:entries="@array/radiusNames"
+            android:entryValues="@array/radiusValues"/>
+
+        <SwitchPreference
+            android:key="satelliteDisplayMode"
+            android:title="Satellite Display Mode"
+            android:summary="Choose the appearance of your map."/>
+
+        <SwitchPreference
+            android:key="relativePricing"
+            android:title="Relative Pricing"
+            android:summaryOn="Heatmap colours will be relative to the dataset shown."
+            android:summaryOff="Heatmap colours are absolute."/>
+
+    </PreferenceCategory>
+</PreferenceScreen>
