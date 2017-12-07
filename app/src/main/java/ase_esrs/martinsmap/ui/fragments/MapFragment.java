@@ -13,7 +13,6 @@ import com.google.android.gms.location.LocationListener;
 
 import android.Manifest;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -48,7 +47,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 import ase_esrs.martinsmap.ui.activities.MainActivity;
-import ase_esrs.martinsmap.ui.activities.SettingsActivity;
 import util.Prices;
 
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
@@ -229,7 +227,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     }
 
     private void updateServer() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.applicationContext);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
         String radiusString = prefs.getString("radius", "50");
 
         int radius = Integer.parseInt(radiusString);
