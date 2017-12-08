@@ -9,7 +9,16 @@ import ase_esrs.martinsmap.ui.activities.SettingsActivity;
 public class DefaultsManager {
 
     // Singleton instance.
-    public static DefaultsManager sharedInstance = new DefaultsManager();
+    private static DefaultsManager instance;
+
+    private DefaultsManager() { }
+
+    public static DefaultsManager getInstance() {
+        if(instance == null) {
+            instance = new DefaultsManager();
+        }
+        return instance;
+    }
 
     public void setDefaults(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
