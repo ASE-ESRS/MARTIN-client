@@ -45,8 +45,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
-import ase_esrs.martinsmap.ui.activities.MainActivity;
 import util.Prices;
 
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
@@ -63,9 +63,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     GoogleMap mGoogleMap;
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
-    Marker mCurrLocationMarker;
     RequestQueue queue;
-    boolean foundLocation = false;
 
     @Override
     public void onResume() {
@@ -91,6 +89,11 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
+        googleMap.setOnMapClickListener((point) -> {
+            mLastLocation.setLatitude(point.latitude);
+            mLastLocation.setLongitude(point.longitude);
+            updateMap();
+        });
         //Initialize Google Play Services
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(getActivity(),
@@ -121,6 +124,8 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
         queue = Volley.newRequestQueue(getActivity());
         checkPermission(INTERNET_PERMISSION, Manifest.permission.INTERNET);
 
+
+
         LocationRequest mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(30000);
         mLocationRequest.setFastestInterval(30000);
@@ -141,27 +146,21 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     @Override
     public void onLocationChanged(Location location) {
         Log.i("Martin's Maps", "Location Updated");
-        mLastLocation = location;
-        if (mCurrLocationMarker != null) {
-            mCurrLocationMarker.remove();
+        if(mLastLocation == null) {
+            mLastLocation = location;
+            updateMap();
         }
+    }
 
-        //Place current location marker
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-
-        if(!foundLocation) {
-            //move map camera
-            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,15));
-            foundLocation = true;
-        }
-
+    private void updateMap() {
+        mGoogleMap.clear();
+        LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng,15));
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
-        markerOptions.title("Current Position");
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
-        mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
-
-        updateServer();
+        Marker mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
+        requestHousePricesPaidData();
     }
 
     private void checkPermission(final int permissionConstant, final String manifestPermissionConstant) {
@@ -220,13 +219,13 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
             case INTERNET_PERMISSION:
                 if(grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    updateServer();
+                    requestHousePricesPaidData();
                 }
                 break;
         }
     }
 
-    private void updateServer() {
+    private void requestHousePricesPaidData() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
         String radiusString = prefs.getString("radius", "50");
 
@@ -274,8 +273,9 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
                     double weight = Prices.priceIntensity(obj.getInt("price")); //TODO: add if statement here whether to pass max and min to Prices.priceIntensity depending on scale slider setting
                     locations.add(new WeightedLatLng(loc, weight));
                 }
-                HeatmapTileProvider tileProvider = new Builder().weightedData(locations).build();
-                mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));
+                Log.d("Martin's Maps", array.toString());
+                HeatmapTileProvider heatmapTileProvider = new Builder().weightedData(locations).build();
+                mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(heatmapTileProvider));
             }
         } catch(JSONException ex) {
             Log.e("Martin's Maps", ex.getMessage());
