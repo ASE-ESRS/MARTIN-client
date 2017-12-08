@@ -4,7 +4,6 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
@@ -46,16 +45,13 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import util.JSONArrayUtils;
 import util.Prices;
 
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
 import static ase_esrs.martinsmap.ui.Permissions.LOCATION_PERMISSION;
 
-public class MapFragment extends com.google.android.gms.maps.MapFragment
-        implements OnMapReadyCallback,
-                GoogleApiClient.ConnectionCallbacks,
-                GoogleApiClient.OnConnectionFailedListener,
-                LocationListener {
+public class MapFragment extends com.google.android.gms.maps.MapFragment implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private final static String SERVER_URI = "https://4wmuzhlr5b.execute-api.eu-west-2.amazonaws.com/prod/martinServer";
 
@@ -70,14 +66,8 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
         super.onResume();
 
         if(mGoogleMap != null) {
-            if (sharedPreferences == null) {
-                sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
-            }
-            if (sharedPreferences.getBoolean("satelliteDisplayMode", false)) {
-                mGoogleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-            } else {
-                mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-            }
+            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+            mGoogleMap.setMapType(sharedPreferences.getBoolean("satelliteDisplayMode", false) ? GoogleMap.MAP_TYPE_HYBRID : GoogleMap.MAP_TYPE_NORMAL);
         }
         setUpMapIfNeeded();
     }
@@ -100,30 +90,21 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
 
-        if(sharedPreferences == null) {
-            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
-        }
-
-        if(sharedPreferences.getBoolean("satelliteDisplayMode", false)) {
-            mGoogleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-        } else {
-            mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        }
+        mGoogleMap.setMapType(sharedPreferences.getBoolean("satelliteDisplayMode", false) ? GoogleMap.MAP_TYPE_HYBRID : GoogleMap.MAP_TYPE_NORMAL);
         mGoogleMap.setOnMapClickListener((point) -> {
             mLastLocation.setLatitude(point.latitude);
             mLastLocation.setLongitude(point.longitude);
             updateMap();
         });
-        //Initialize Google Play Services
+
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(getActivity(),
                     Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
-                //Location Permission already granted
                 buildGoogleApiClient();
             } else {
-                //Request Permissions
                 checkPermission(LOCATION_PERMISSION, Manifest.permission.ACCESS_FINE_LOCATION);
             }
         } else {
@@ -254,12 +235,9 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
             public void onResponse(JSONArray response) {
                 addHeatMap(response);
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("Martin's Maps", "A network error occurred: "+error.toString());
-                Toast.makeText(getActivity(), "Network error occurred", Toast.LENGTH_SHORT).show();
-            }
+        }, (error) -> {
+            Log.e("Martin's Maps", "A network error occurred: "+error.toString());
+            Toast.makeText(getActivity(), "Network error occurred", Toast.LENGTH_SHORT).show();
         });
         jsonArrayRequest.setRetryPolicy(new DefaultRetryPolicy(30000,
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
@@ -273,23 +251,12 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
                 Toast.makeText(getActivity(), "No price paid data available", Toast.LENGTH_SHORT).show();
             } else {
                 ArrayList<WeightedLatLng> locations = new ArrayList<>();
-                int max = array.getJSONObject(0).getInt("price");
-                int min = array.getJSONObject(0).getInt("price");
-                for (int i = 1; i < array.length(); i++) { //Retrieves max and min price values
-                    int currprice = array.getJSONObject(i).getInt("price");
-                    if (currprice > max) {
-                        max = currprice;
-                    } else if (currprice < min) min = currprice;
-                }
+                int min = JSONArrayUtils.getMinPrice(array);
+                int max= JSONArrayUtils.getMaxPrice(array);
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject obj = array.getJSONObject(i);
                     LatLng loc = new LatLng(obj.getDouble("latitude"), obj.getDouble("longitude"));
-                    double weight;
-                    if(sharedPreferences.getBoolean("relativePricing", false)) {
-                        weight = Prices.priceIntensity(obj.getInt("price"), max, min);
-                    } else {
-                        weight = Prices.priceIntensity(obj.getInt("price"));
-                    }
+                    double weight = sharedPreferences.getBoolean("relativePricing", false) ? Prices.priceIntensity(obj.getInt("price"), max, min) : Prices.priceIntensity(obj.getInt("price"));
                     locations.add(new WeightedLatLng(loc, weight));
                 }
                 Log.d("Martin's Maps", array.toString());
