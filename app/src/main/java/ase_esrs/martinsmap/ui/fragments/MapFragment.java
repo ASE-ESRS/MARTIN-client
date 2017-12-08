@@ -45,7 +45,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import util.Prices;
 
@@ -64,10 +63,22 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
     RequestQueue queue;
+    SharedPreferences sharedPreferences;
 
     @Override
     public void onResume() {
         super.onResume();
+
+        if(mGoogleMap != null) {
+            if (sharedPreferences == null) {
+                sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+            }
+            if (sharedPreferences.getBoolean("satelliteDisplayMode", false)) {
+                mGoogleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+            } else {
+                mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+            }
+        }
         setUpMapIfNeeded();
     }
 
@@ -89,7 +100,17 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
-        googleMap.setOnMapClickListener((point) -> {
+
+        if(sharedPreferences == null) {
+            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+        }
+
+        if(sharedPreferences.getBoolean("satelliteDisplayMode", false)) {
+            mGoogleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+        } else {
+            mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        }
+        mGoogleMap.setOnMapClickListener((point) -> {
             mLastLocation.setLatitude(point.latitude);
             mLastLocation.setLongitude(point.longitude);
             updateMap();
@@ -121,10 +142,9 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
 
     @Override
     public void onConnected(Bundle bundle) {
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
         queue = Volley.newRequestQueue(getActivity());
         checkPermission(INTERNET_PERMISSION, Manifest.permission.INTERNET);
-
-
 
         LocationRequest mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(30000);
@@ -200,8 +220,6 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                    // permission was granted, yay! Do the
-                    // location-related task you need to do.
                     if (ContextCompat.checkSelfPermission(getActivity(),
                             Manifest.permission.ACCESS_FINE_LOCATION)
                             == PackageManager.PERMISSION_GRANTED) {
@@ -213,7 +231,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
                     }
 
                 } else {
-                    Toast.makeText(getActivity(), "permission denied", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), "Permission Denied", Toast.LENGTH_LONG).show();
                 }
                 break;
             case INTERNET_PERMISSION:
@@ -226,11 +244,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     }
 
     private void requestHousePricesPaidData() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
-        String radiusString = prefs.getString("radius", "50");
-
-        int radius = Integer.parseInt(radiusString);
-
+        int radius = Integer.parseInt(sharedPreferences.getString("radius", "50"));
         Toast.makeText(getActivity(), "Finding Price Paid Data...", Toast.LENGTH_LONG).show();
         String requestUrl = SERVER_URI+"?latitude="+mLastLocation.getLatitude()+"&longitude="+mLastLocation.getLongitude()+"&distance="+radius;
         Log.d("Martin's Map", requestUrl);
@@ -247,7 +261,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
                 Toast.makeText(getActivity(), "Network error occurred", Toast.LENGTH_SHORT).show();
             }
         });
-        jsonArrayRequest.setRetryPolicy(new DefaultRetryPolicy(20000,
+        jsonArrayRequest.setRetryPolicy(new DefaultRetryPolicy(30000,
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         queue.add(jsonArrayRequest);
@@ -270,7 +284,12 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject obj = array.getJSONObject(i);
                     LatLng loc = new LatLng(obj.getDouble("latitude"), obj.getDouble("longitude"));
-                    double weight = Prices.priceIntensity(obj.getInt("price")); //TODO: add if statement here whether to pass max and min to Prices.priceIntensity depending on scale slider setting
+                    double weight;
+                    if(sharedPreferences.getBoolean("relativePricing", false)) {
+                        weight = Prices.priceIntensity(obj.getInt("price"), max, min);
+                    } else {
+                        weight = Prices.priceIntensity(obj.getInt("price"));
+                    }
                     locations.add(new WeightedLatLng(loc, weight));
                 }
                 Log.d("Martin's Maps", array.toString());
