@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Set up default values in persistent storage.
-        DefaultsManager.sharedInstance.setDefaults(this);
+        DefaultsManager.getInstance(getApplicationContext()).setDefaults();
 
         toolbar = (Toolbar) findViewById(R.id.my_toolbar);
         toolbar.setTitle("Martin's Map");
