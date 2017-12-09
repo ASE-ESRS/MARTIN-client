@@ -4,7 +4,6 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
@@ -13,10 +12,12 @@ import com.google.android.gms.location.LocationListener;
 
 import android.Manifest;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -44,30 +45,30 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import util.PersistentStorageManager;
+import util.JSONArrayUtils;
 import util.Prices;
 
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
 import static ase_esrs.martinsmap.ui.Permissions.LOCATION_PERMISSION;
 
-public class MapFragment extends com.google.android.gms.maps.MapFragment
-        implements OnMapReadyCallback,
-                GoogleApiClient.ConnectionCallbacks,
-                GoogleApiClient.OnConnectionFailedListener,
-                LocationListener {
+public class MapFragment extends com.google.android.gms.maps.MapFragment implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private final static String SERVER_URI = "https://4wmuzhlr5b.execute-api.eu-west-2.amazonaws.com/prod/martinServer";
 
     GoogleMap mGoogleMap;
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
-    Marker mCurrLocationMarker;
     RequestQueue queue;
-    boolean foundLocation = false;
+    SharedPreferences sharedPreferences;
 
     @Override
     public void onResume() {
         super.onResume();
+
+        if(mGoogleMap != null) {
+            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+            mGoogleMap.setMapType(sharedPreferences.getBoolean("satelliteDisplayMode", false) ? GoogleMap.MAP_TYPE_HYBRID : GoogleMap.MAP_TYPE_NORMAL);
+        }
         setUpMapIfNeeded();
     }
 
@@ -89,19 +90,24 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
-        //Initialize Google Play Services
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+
+        mGoogleMap.setMapType(sharedPreferences.getBoolean("satelliteDisplayMode", false) ? GoogleMap.MAP_TYPE_HYBRID : GoogleMap.MAP_TYPE_NORMAL);
+        mGoogleMap.setOnMapClickListener((point) -> {
+            mLastLocation.setLatitude(point.latitude);
+            mLastLocation.setLongitude(point.longitude);
+            updateMap();
+        });
+
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(getActivity(),
                     Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
-                //Location Permission already granted
                 buildGoogleApiClient();
             } else {
-                //Request Permissions
                 checkPermission(LOCATION_PERMISSION, Manifest.permission.ACCESS_FINE_LOCATION);
             }
-        }
-        else {
+        } else {
             buildGoogleApiClient();
         }
     }
@@ -117,6 +123,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
 
     @Override
     public void onConnected(Bundle bundle) {
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
         queue = Volley.newRequestQueue(getActivity());
         checkPermission(INTERNET_PERMISSION, Manifest.permission.INTERNET);
 
@@ -140,27 +147,21 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
     @Override
     public void onLocationChanged(Location location) {
         Log.i("Martin's Maps", "Location Updated");
-        mLastLocation = location;
-        if (mCurrLocationMarker != null) {
-            mCurrLocationMarker.remove();
+        if(mLastLocation == null) {
+            mLastLocation = location;
+            updateMap();
         }
+    }
 
-        //Place current location marker
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-
-        if(!foundLocation) {
-            //move map camera
-            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,15));
-            foundLocation = true;
-        }
-
+    private void updateMap() {
+        mGoogleMap.clear();
+        LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng,15));
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
-        markerOptions.title("Current Position");
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
-        mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
-
-        updateServer();
+        Marker mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
+        requestHousePricesPaidData();
     }
 
     private void checkPermission(final int permissionConstant, final String manifestPermissionConstant) {
@@ -200,8 +201,6 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                    // permission was granted, yay! Do the
-                    // location-related task you need to do.
                     if (ContextCompat.checkSelfPermission(getActivity(),
                             Manifest.permission.ACCESS_FINE_LOCATION)
                             == PackageManager.PERMISSION_GRANTED) {
@@ -213,21 +212,20 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
                     }
 
                 } else {
-                    Toast.makeText(getActivity(), "permission denied", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), "Permission Denied", Toast.LENGTH_LONG).show();
                 }
                 break;
             case INTERNET_PERMISSION:
                 if(grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    updateServer();
+                    requestHousePricesPaidData();
                 }
                 break;
         }
     }
 
-    private void updateServer() {
-        int radius = PersistentStorageManager.sharedInstance.getSearchRadiusInMeters();
-
+    private void requestHousePricesPaidData() {
+        int radius = Integer.parseInt(sharedPreferences.getString("radius", "50"));
         Toast.makeText(getActivity(), "Finding Price Paid Data...", Toast.LENGTH_LONG).show();
         String requestUrl = SERVER_URI+"?latitude="+mLastLocation.getLatitude()+"&longitude="+mLastLocation.getLongitude()+"&distance="+radius;
         Log.d("Martin's Map", requestUrl);
@@ -237,14 +235,11 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
             public void onResponse(JSONArray response) {
                 addHeatMap(response);
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("Martin's Maps", "A network error occurred: "+error.toString());
-                Toast.makeText(getActivity(), "Network error occurred", Toast.LENGTH_SHORT).show();
-            }
+        }, (error) -> {
+            Log.e("Martin's Maps", "A network error occurred: "+error.toString());
+            Toast.makeText(getActivity(), "Network error occurred", Toast.LENGTH_SHORT).show();
         });
-        jsonArrayRequest.setRetryPolicy(new DefaultRetryPolicy(20000,
+        jsonArrayRequest.setRetryPolicy(new DefaultRetryPolicy(30000,
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         queue.add(jsonArrayRequest);
@@ -256,14 +251,17 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment
                 Toast.makeText(getActivity(), "No price paid data available", Toast.LENGTH_SHORT).show();
             } else {
                 ArrayList<WeightedLatLng> locations = new ArrayList<>();
+                int min = JSONArrayUtils.getMinPrice(array);
+                int max= JSONArrayUtils.getMaxPrice(array);
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject obj = array.getJSONObject(i);
                     LatLng loc = new LatLng(obj.getDouble("latitude"), obj.getDouble("longitude"));
-                    double weight = Prices.priceIntensity(obj.getInt("price"));
+                    double weight = sharedPreferences.getBoolean("relativePricing", false) ? Prices.priceIntensity(obj.getInt("price"), max, min) : Prices.priceIntensity(obj.getInt("price"));
                     locations.add(new WeightedLatLng(loc, weight));
                 }
-                HeatmapTileProvider tileProvider = new Builder().weightedData(locations).build();
-                mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));
+                Log.d("Martin's Maps", array.toString());
+                HeatmapTileProvider heatmapTileProvider = new Builder().weightedData(locations).build();
+                mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(heatmapTileProvider));
             }
         } catch(JSONException ex) {
             Log.e("Martin's Maps", ex.getMessage());

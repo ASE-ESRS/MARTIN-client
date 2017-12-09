@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="Map Look and Feel">
+
+        <SwitchPreference
+            android:key="satelliteDisplayMode"
+            android:title="Satellite Map"
+            android:summaryOn="Map uses satellite imagery."
+            android:summaryOff="Basic map is displayed."/>
+
+        <SwitchPreference
+            android:key="relativePricing"
+            android:title="Relative Pricing"
+            android:summaryOn="Heat map colours will be relative to the dataset shown."
+            android:summaryOff="Heat map colours are based on whole UK data."/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Property Search Settings">
+
+        <ListPreference
+            android:key="radius"
+            android:title="Search Radius"
+            android:summary="%s"
+            android:entries="@array/radiusNames"
+            android:entryValues="@array/radiusValues"/>
+
+        <SwitchPreference
+            android:key="policeData"
+            android:title="Crime Statistics"
+            android:summary="Show crime locations from Police UK" />
+
+    </PreferenceCategory>
+</PreferenceScreen>
