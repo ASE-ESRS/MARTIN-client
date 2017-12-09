@@ -267,18 +267,22 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
                 Log.d("Martin's Maps", array.toString());
                 HeatmapTileProvider heatmapTileProvider = new Builder().weightedData(locations).build();
                 mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(heatmapTileProvider));
-                LatLng latlng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-                Marker heatMapCenter = mGoogleMap.addMarker(new MarkerOptions()
-                        .position(latlng)
-                        .title("HeatMap Figures")
-                        .snippet("Average House Price: " + average)
-                        .snippet("Max House Price: " + max)
-                        .snippet("Min House Price: " + min));
-                heatMapCenter.showInfoWindow();
+                addHeatMapMarker(average, max, min);
             }
         } catch (JSONException ex) {
             Log.e("Martin's Maps", ex.getMessage());
         }
+    }
+
+    private void addHeatMapMarker(int average, int max, int min) {
+        LatLng latlng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+        Marker heatMapCenter = mGoogleMap.addMarker(new MarkerOptions()
+                .position(latlng)
+                .title("HeatMap Figures")
+                .snippet("Average House Price: " + average)
+                .snippet("Max House Price: " + max)
+                .snippet("Min House Price: " + min));
+        heatMapCenter.showInfoWindow();
     }
 
 }
