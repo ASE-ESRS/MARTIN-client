@@ -32,6 +32,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlayOptions;
@@ -65,7 +66,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     public void onResume() {
         super.onResume();
 
-        if(mGoogleMap != null) {
+        if (mGoogleMap != null) {
             sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
             mGoogleMap.setMapType(sharedPreferences.getBoolean("satelliteDisplayMode", false) ? GoogleMap.MAP_TYPE_HYBRID : GoogleMap.MAP_TYPE_NORMAL);
         }
@@ -93,6 +94,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
 
         mGoogleMap.setMapType(sharedPreferences.getBoolean("satelliteDisplayMode", false) ? GoogleMap.MAP_TYPE_HYBRID : GoogleMap.MAP_TYPE_NORMAL);
+        mGoogleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(49.82380908513249, -10.8544921875), new LatLng(59.478568831926395, 2.021484375)));
         mGoogleMap.setOnMapClickListener((point) -> {
             mLastLocation.setLatitude(point.latitude);
             mLastLocation.setLongitude(point.longitude);
@@ -139,15 +141,17 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     }
 
     @Override
-    public void onConnectionSuspended(int i) {}
+    public void onConnectionSuspended(int i) {
+    }
 
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {}
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+    }
 
     @Override
     public void onLocationChanged(Location location) {
         Log.i("Martin's Maps", "Location Updated");
-        if(mLastLocation == null) {
+        if (mLastLocation == null) {
             mLastLocation = location;
             updateMap();
         }
@@ -156,7 +160,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     private void updateMap() {
         mGoogleMap.clear();
         LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng,15));
+        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
@@ -165,7 +169,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     }
 
     private void checkPermission(final int permissionConstant, final String manifestPermissionConstant) {
-        if(ContextCompat.checkSelfPermission(getActivity(), manifestPermissionConstant)
+        if (ContextCompat.checkSelfPermission(getActivity(), manifestPermissionConstant)
                 != PackageManager.PERMISSION_GRANTED) {
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
@@ -173,7 +177,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
 
                 new AlertDialog.Builder(getActivity())
                         .setTitle("Permission Needed")
-                        .setMessage("This app needs the "+manifestPermissionConstant+" permission, please accept to use related functionality.")
+                        .setMessage("This app needs the " + manifestPermissionConstant + " permission, please accept to use related functionality.")
                         .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
@@ -216,7 +220,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
                 }
                 break;
             case INTERNET_PERMISSION:
-                if(grantResults.length > 0
+                if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     requestHousePricesPaidData();
                 }
@@ -227,7 +231,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     private void requestHousePricesPaidData() {
         int radius = Integer.parseInt(sharedPreferences.getString("radius", "50"));
         Toast.makeText(getActivity(), "Finding Price Paid Data...", Toast.LENGTH_LONG).show();
-        String requestUrl = SERVER_URI+"?latitude="+mLastLocation.getLatitude()+"&longitude="+mLastLocation.getLongitude()+"&distance="+radius;
+        String requestUrl = SERVER_URI + "?latitude=" + mLastLocation.getLatitude() + "&longitude=" + mLastLocation.getLongitude() + "&distance=" + radius;
         Log.d("Martin's Map", requestUrl);
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.POST, requestUrl, null, new Response.Listener<JSONArray>() {
@@ -236,7 +240,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
                 addHeatMap(response);
             }
         }, (error) -> {
-            Log.e("Martin's Maps", "A network error occurred: "+error.toString());
+            Log.e("Martin's Maps", "A network error occurred: " + error.toString());
             Toast.makeText(getActivity(), "Network error occurred", Toast.LENGTH_SHORT).show();
         });
         jsonArrayRequest.setRetryPolicy(new DefaultRetryPolicy(30000,
@@ -247,12 +251,13 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
 
     private void addHeatMap(JSONArray array) {
         try {
-            if(array.length() == 0) {
+            if (array.length() == 0) {
                 Toast.makeText(getActivity(), "No price paid data available", Toast.LENGTH_SHORT).show();
             } else {
                 ArrayList<WeightedLatLng> locations = new ArrayList<>();
                 int min = JSONArrayUtils.getMinPrice(array);
-                int max= JSONArrayUtils.getMaxPrice(array);
+                int max = JSONArrayUtils.getMaxPrice(array);
+                int average = JSONArrayUtils.getAveragePrice(array);
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject obj = array.getJSONObject(i);
                     LatLng loc = new LatLng(obj.getDouble("latitude"), obj.getDouble("longitude"));
@@ -262,10 +267,22 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
                 Log.d("Martin's Maps", array.toString());
                 HeatmapTileProvider heatmapTileProvider = new Builder().weightedData(locations).build();
                 mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(heatmapTileProvider));
+                addHeatMapMarker(average, max, min);
             }
-        } catch(JSONException ex) {
+        } catch (JSONException ex) {
             Log.e("Martin's Maps", ex.getMessage());
         }
+    }
+
+    private void addHeatMapMarker(int average, int max, int min) {
+        LatLng latlng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+        Marker heatMapCenter = mGoogleMap.addMarker(new MarkerOptions()
+                .position(latlng)
+                .title("HeatMap Figures")
+                .snippet("Average House Price: " + average)
+                .snippet("Max House Price: " + max)
+                .snippet("Min House Price: " + min));
+        heatMapCenter.showInfoWindow();
     }
 
 }
