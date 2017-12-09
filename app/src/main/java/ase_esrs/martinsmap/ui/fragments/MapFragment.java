@@ -61,6 +61,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     Location mLastLocation;
     RequestQueue queue;
     SharedPreferences sharedPreferences;
+    Marker mCurrLocationMarker;
 
     @Override
     public void onResume() {
@@ -164,7 +165,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
-        Marker mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
+        mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
         requestHousePricesPaidData();
     }
 
@@ -276,13 +277,11 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
 
     private void addHeatMapMarker(int average, int max, int min) {
         LatLng latlng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-        Marker heatMapCenter = mGoogleMap.addMarker(new MarkerOptions()
+        mCurrLocationMarker = mGoogleMap.addMarker(new MarkerOptions()
                 .position(latlng)
                 .title("HeatMap Figures")
-                .snippet("Average House Price: " + average)
-                .snippet("Max House Price: " + max)
-                .snippet("Min House Price: " + min));
-        heatMapCenter.showInfoWindow();
+                .snippet("Average House Price: " + average + "\n" + "Max House Price: " + max + "\n" + "Min House Price: " + min));
+        mCurrLocationMarker.showInfoWindow();
     }
 
 }
