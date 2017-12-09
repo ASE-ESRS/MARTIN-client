@@ -32,6 +32,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlayOptions;
@@ -93,6 +94,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
 
         mGoogleMap.setMapType(sharedPreferences.getBoolean("satelliteDisplayMode", false) ? GoogleMap.MAP_TYPE_HYBRID : GoogleMap.MAP_TYPE_NORMAL);
+        mGoogleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(49.82380908513249, -10.8544921875), new LatLng(59.478568831926395, 2.021484375)));
         mGoogleMap.setOnMapClickListener((point) -> {
             mLastLocation.setLatitude(point.latitude);
             mLastLocation.setLongitude(point.longitude);
