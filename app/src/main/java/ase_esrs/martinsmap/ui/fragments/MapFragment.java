@@ -158,6 +158,12 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
         }
     }
 
+    public void updateMap(double latitude, double longitude) {
+        mLastLocation.setLatitude(latitude);
+        mLastLocation.setLongitude(longitude);
+        updateMap();
+    }
+
     private void updateMap() {
         mGoogleMap.clear();
         LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
