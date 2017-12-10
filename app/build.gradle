@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.github.kt3k.coveralls'
 
 android {
     compileSdkVersion 25
@@ -25,15 +24,6 @@ android {
         targetCompatibility 1.8
         sourceCompatibility 1.8
     }
-}
-
-coveralls {
-    jacocoReportPath = "${buildDir}/reports/coverage/debug/report.xml"
-}
-
-tasks.coveralls {
-    dependsOn 'test'
-    onlyIf { System.env.'CI' }
 }
 
 dependencies {
