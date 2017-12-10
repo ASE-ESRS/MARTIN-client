@@ -14,7 +14,7 @@ public class LatLonBoundary {
         this.lonFrom = longitude - lonChange;
 
         this.latTo = latitude + latChange;
-        this.lonFrom = longitude + lonChange;
+        this.lonTo = longitude + lonChange;
     }
 
      public double getLatFrom() {
