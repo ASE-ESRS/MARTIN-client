@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
         DefaultsManager.getInstance(getApplicationContext()).setDefaults();
 
         toolbar = (Toolbar) findViewById(R.id.my_toolbar);
-        toolbar.setTitle("Martin's Map");
+        toolbar.setTitle(R.string.app_name);
         toolbar.setTitleTextColor(Color.WHITE);
         toolbar.setBackgroundColor(Color.rgb(103,58,183));
         setSupportActionBar(toolbar);
