@@ -1,14 +1,21 @@
 package util;
 
-/**
- * Created by markp on 09/12/2017.
- */
-
 public class LatLonBoundary {
     private double latFrom;
     private double latTo;
     private double lonFrom;
     private double lonTo;
+
+    public LatLonBoundary(double latitude, double longitude, int radius) {
+        double latChange = Math.abs(radius*(1/(110.574*1000)));
+        double lonChange = Math.abs(radius*(1/(111.320*1000)));
+
+        this.latFrom = latitude - latChange;
+        this.lonFrom = longitude - lonChange;
+
+        this.latTo = latitude + latChange;
+        this.lonFrom = longitude + lonChange;
+    }
 
      public double getLatFrom() {
         return latFrom;
