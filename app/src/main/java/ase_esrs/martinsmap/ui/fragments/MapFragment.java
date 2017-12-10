@@ -96,7 +96,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
 
         mGoogleMap.setMapType(sharedPreferences.getBoolean("satelliteDisplayMode", false) ? GoogleMap.MAP_TYPE_HYBRID : GoogleMap.MAP_TYPE_NORMAL);
         mGoogleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(49.82380908513249, -10.8544921875), new LatLng(59.478568831926395, 2.021484375)));
-        mGoogleMap.setOnMapClickListener((point) -> {
+        mGoogleMap.setOnMapLongClickListener((point) -> {
             mLastLocation.setLatitude(point.latitude);
             mLastLocation.setLongitude(point.longitude);
             updateMap();
@@ -156,6 +156,12 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
             mLastLocation = location;
             updateMap();
         }
+    }
+
+    public void updateMap(double latitude, double longitude) {
+        mLastLocation.setLatitude(latitude);
+        mLastLocation.setLongitude(longitude);
+        updateMap();
     }
 
     private void updateMap() {
