@@ -5,11 +5,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity">
 
-    <!-- Settings, should always be shown -->
     <item
         android:id="@+id/action_settings"
         android:title="Settings"
-        android:icon="@drawable/ic_settings_icon"
+        android:icon="@drawable/ic_settings_white_24dp"
         app:showAsAction="ifRoom"/>
 
 </menu>

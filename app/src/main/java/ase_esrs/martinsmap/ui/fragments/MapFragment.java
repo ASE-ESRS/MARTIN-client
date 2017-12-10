@@ -47,6 +47,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 import util.JSONArrayUtils;
+import util.LatLonBoundary;
 import util.Prices;
 
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
@@ -96,7 +97,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
 
         mGoogleMap.setMapType(sharedPreferences.getBoolean("satelliteDisplayMode", false) ? GoogleMap.MAP_TYPE_HYBRID : GoogleMap.MAP_TYPE_NORMAL);
         mGoogleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(49.82380908513249, -10.8544921875), new LatLng(59.478568831926395, 2.021484375)));
-        mGoogleMap.setOnMapClickListener((point) -> {
+        mGoogleMap.setOnMapLongClickListener((point) -> {
             mLastLocation.setLatitude(point.latitude);
             mLastLocation.setLongitude(point.longitude);
             updateMap();
@@ -156,6 +157,12 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
             mLastLocation = location;
             updateMap();
         }
+    }
+
+    public void updateMap(double latitude, double longitude) {
+        mLastLocation.setLatitude(latitude);
+        mLastLocation.setLongitude(longitude);
+        updateMap();
     }
 
     private void updateMap() {
@@ -231,8 +238,13 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
 
     private void requestHousePricesPaidData() {
         int radius = Integer.parseInt(sharedPreferences.getString("radius", "50"));
+        LatLonBoundary boundary = new LatLonBoundary(mLastLocation.getLatitude(), mLastLocation.getLongitude(), radius);
         Toast.makeText(getActivity(), "Finding Price Paid Data...", Toast.LENGTH_LONG).show();
-        String requestUrl = SERVER_URI + "?latitude=" + mLastLocation.getLatitude() + "&longitude=" + mLastLocation.getLongitude() + "&distance=" + radius;
+        String requestUrl = SERVER_URI + "?start_latitude=" + boundary.getLatFrom()
+                + "&start_longitude=" + boundary.getLonFrom()
+                + "&end_latitude=" + boundary.getLatTo()
+                + "&end_longitude=" + boundary.getLonTo()
+                + "&distance=" + radius;
         Log.d("Martin's Map", requestUrl);
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.POST, requestUrl, null, new Response.Listener<JSONArray>() {
