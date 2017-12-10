@@ -268,20 +268,10 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
                 Log.d("Martin's Maps", array.toString());
                 HeatmapTileProvider heatmapTileProvider = new Builder().weightedData(locations).build();
                 mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(heatmapTileProvider));
-                addHeatMapMarker(average, max, min);
             }
         } catch (JSONException ex) {
             Log.e("Martin's Maps", ex.getMessage());
         }
-    }
-
-    private void addHeatMapMarker(int average, int max, int min) {
-        LatLng latlng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-        mCurrLocationMarker = mGoogleMap.addMarker(new MarkerOptions()
-                .position(latlng)
-                .title("HeatMap Figures")
-                .snippet("Average House Price: " + average + "\n" + "Max House Price: " + max + "\n" + "Min House Price: " + min));
-        mCurrLocationMarker.showInfoWindow();
     }
 
 }
