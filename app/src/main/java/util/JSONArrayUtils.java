@@ -3,7 +3,8 @@ package util;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-public class JSONArrayUtils {
+public interface JSONArrayUtils {
+
     public static int getMinPrice(JSONArray array) throws JSONException {
         int min = array.getJSONObject(0).getInt("price");
         for (int i = 1; i < array.length(); i++) {
