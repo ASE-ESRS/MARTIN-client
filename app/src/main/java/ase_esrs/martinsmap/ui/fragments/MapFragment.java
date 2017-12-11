@@ -99,8 +99,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
         mGoogleMap.setMapType(sharedPreferences.getBoolean("satelliteDisplayMode", false) ? GoogleMap.MAP_TYPE_HYBRID : GoogleMap.MAP_TYPE_NORMAL);
         mGoogleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(49.82380908513249, -10.8544921875), new LatLng(59.478568831926395, 2.021484375)));
         mGoogleMap.setOnMapLongClickListener((point) -> {
-            mLastLocation.setLatitude(point.latitude);
-            mLastLocation.setLongitude(point.longitude);
+            lastLocation = new LatLng(point.latitude, point.longitude);
             updateMap();
         });
 
@@ -243,7 +242,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
 
     private void requestHousePricesPaidData() {
         int radius = Integer.parseInt(sharedPreferences.getString("radius", "50"));
-        LatLonBoundary boundary = new LatLonBoundary(mLastLocation.getLatitude(), mLastLocation.getLongitude(), radius);
+        LatLonBoundary boundary = new LatLonBoundary(lastLocation.latitude, lastLocation.longitude, radius);
         Toast.makeText(getActivity(), "Finding Price Paid Data...", Toast.LENGTH_LONG).show();
         String requestUrl = SERVER_URI + "?start_latitude=" + boundary.getLatFrom()
                 + "&start_longitude=" + boundary.getLonFrom()
