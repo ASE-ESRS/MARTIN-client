@@ -27,15 +27,6 @@ android {
     }
 }
 
-coveralls {
-    jacocoReportPath = "${buildDir}/reports/coverage/debug/report.xml"
-}
-
-tasks.coveralls {
-    dependsOn 'test'
-    onlyIf { System.env.'CI' }
-}
-
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
@@ -50,4 +41,13 @@ dependencies {
     compile 'com.android.support:support-v4:25.3.1'
     compile 'com.android.support:design:25.3.1'
     testCompile 'junit:junit:4.12'
+}
+
+coveralls {
+    jacocoReportPath = "${path}/../build/reports/jacoco/debug/jacoco.xml"
+}
+
+tasks.coveralls {
+    dependsOn 'jacocoTestReportDebug'
+    onlyIf { System.env.'CI' }
 }

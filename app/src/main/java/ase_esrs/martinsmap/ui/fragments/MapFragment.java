@@ -47,6 +47,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 import util.JSONArrayUtils;
+import util.LatLonBoundary;
 import util.Prices;
 
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
@@ -237,8 +238,13 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
 
     private void requestHousePricesPaidData() {
         int radius = Integer.parseInt(sharedPreferences.getString("radius", "50"));
+        LatLonBoundary boundary = new LatLonBoundary(mLastLocation.getLatitude(), mLastLocation.getLongitude(), radius);
         Toast.makeText(getActivity(), "Finding Price Paid Data...", Toast.LENGTH_LONG).show();
-        String requestUrl = SERVER_URI + "?latitude=" + mLastLocation.getLatitude() + "&longitude=" + mLastLocation.getLongitude() + "&distance=" + radius;
+        String requestUrl = SERVER_URI + "?start_latitude=" + boundary.getLatFrom()
+                + "&start_longitude=" + boundary.getLonFrom()
+                + "&end_latitude=" + boundary.getLatTo()
+                + "&end_longitude=" + boundary.getLonTo()
+                + "&distance=" + radius;
         Log.d("Martin's Map", requestUrl);
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.POST, requestUrl, null, new Response.Listener<JSONArray>() {
@@ -274,20 +280,10 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
                 Log.d("Martin's Maps", array.toString());
                 HeatmapTileProvider heatmapTileProvider = new Builder().weightedData(locations).build();
                 mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(heatmapTileProvider));
-                addHeatMapMarker(average, max, min);
             }
         } catch (JSONException ex) {
             Log.e("Martin's Maps", ex.getMessage());
         }
-    }
-
-    private void addHeatMapMarker(int average, int max, int min) {
-        LatLng latlng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-        mCurrLocationMarker = mGoogleMap.addMarker(new MarkerOptions()
-                .position(latlng)
-                .title("HeatMap Figures")
-                .snippet("Average House Price: " + average + "\n" + "Max House Price: " + max + "\n" + "Min House Price: " + min));
-        mCurrLocationMarker.showInfoWindow();
     }
 
 }
