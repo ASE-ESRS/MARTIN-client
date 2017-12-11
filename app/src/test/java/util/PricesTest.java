@@ -1,29 +1,16 @@
 package util;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 /**
- * Created by danny on 23/11/2017.
+ * Testing class for Prices
  */
 public class PricesTest {
 
-    @Before
-    public void setUp() throws Exception {
-    }
-
-    @After
-    public void tearDown() throws Exception {
-
-    }
-
     @Test
     public void priceIntensity() throws Exception {
-        Prices prices = new Prices();
-        assertTrue(prices instanceof Prices);
         assertEquals(Prices.priceIntensity(500000), 1.0, 0.01);
         assertEquals(Prices.priceIntensity(287000), 0.5890909, 0.001);
         assertEquals(Prices.priceIntensity(125000), 0.0, 0.01);

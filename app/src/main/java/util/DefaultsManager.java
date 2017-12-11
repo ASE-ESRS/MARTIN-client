@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
-import ase_esrs.martinsmap.ui.activities.SettingsActivity;
-
 public class DefaultsManager {
 
     // Singleton instance.
