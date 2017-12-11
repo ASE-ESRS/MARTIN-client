@@ -60,6 +60,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     GoogleMap mGoogleMap;
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
+    LatLng lastLocation;
     RequestQueue queue;
     SharedPreferences sharedPreferences;
     Marker mCurrLocationMarker;
@@ -127,6 +128,11 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
 
     @Override
     public void onConnected(Bundle bundle) {
+
+        if(lastLocation == null) {
+            lastLocation = new LatLng(51.5285582,-0.2416796);
+        }
+
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
         queue = Volley.newRequestQueue(getActivity());
         checkPermission(INTERNET_PERMISSION, Manifest.permission.INTERNET);
@@ -155,22 +161,21 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
         Log.i("Martin's Maps", "Location Updated");
         if (mLastLocation == null) {
             mLastLocation = location;
+            lastLocation = new LatLng(location.getLatitude(), location.getLongitude());
             updateMap();
         }
     }
 
     public void updateMap(double latitude, double longitude) {
-        mLastLocation.setLatitude(latitude);
-        mLastLocation.setLongitude(longitude);
+        lastLocation = new LatLng(latitude, longitude);
         updateMap();
     }
 
     private void updateMap() {
         mGoogleMap.clear();
-        LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(lastLocation, 15));
         MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(latLng);
+        markerOptions.position(lastLocation);
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
         mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
         requestHousePricesPaidData();
