@@ -1,5 +1,8 @@
 package util;
 
+import java.text.NumberFormat;
+import java.util.Locale;
+
 /**
  * The Prices class provides static methods for gauging the intensity of a price up against different bounds.
  * @author Daniel Arthur
@@ -31,6 +34,10 @@ public interface Prices {
             double diff = max_price - min_price;
             return (price - min_price) / diff;
         }
+    }
+
+    public static String priceToString(int price) {
+        return NumberFormat.getCurrencyInstance(Locale.UK).format(price);
     }
 
 }

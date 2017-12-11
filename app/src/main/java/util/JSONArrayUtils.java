@@ -24,10 +24,11 @@ public interface JSONArrayUtils {
     }
 
     public static int getAveragePrice(JSONArray array) throws JSONException {
-        int total = 0;
+        long total = 0;
         for (int i = 0; i < array.length(); i++) {
             total += array.getJSONObject(i).getInt("price");
-                    }
-        return total / array.length();
+        }
+        long avg = total / array.length();
+        return (int) avg;
     }
 }
