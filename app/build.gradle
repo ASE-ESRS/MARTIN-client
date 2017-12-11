@@ -44,7 +44,7 @@ dependencies {
 }
 
 coveralls {
-    jacocoReportPath = "${path}/app/build/reports/jacoco/debug/jacoco.xml"
+    jacocoReportPath = "${path}/../build/reports/jacoco/debug/jacoco.xml"
 }
 
 tasks.coveralls {
