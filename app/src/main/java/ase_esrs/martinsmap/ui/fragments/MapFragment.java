@@ -56,6 +56,7 @@ import static ase_esrs.martinsmap.ui.Permissions.LOCATION_PERMISSION;
 public class MapFragment extends com.google.android.gms.maps.MapFragment implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private final static String SERVER_URI = "https://4wmuzhlr5b.execute-api.eu-west-2.amazonaws.com/prod/martinServer";
+    private final static String POLICE_URI = "https://data.police.uk/api/crimes-street/all-crime";
 
     GoogleMap mGoogleMap;
     GoogleApiClient mGoogleApiClient;
@@ -174,6 +175,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
         mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
         requestHousePricesPaidData();
+        requestCrimeData();
     }
 
     private void checkPermission(final int permissionConstant, final String manifestPermissionConstant) {
@@ -251,6 +253,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
             @Override
             public void onResponse(JSONArray response) {
                 addHeatMap(response);
+                requestCrimeData();
             }
         }, (error) -> {
             Log.e("Martin's Maps", "A network error occurred: " + error.toString());
@@ -280,6 +283,53 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
                 Log.d("Martin's Maps", array.toString());
                 HeatmapTileProvider heatmapTileProvider = new Builder().weightedData(locations).build();
                 mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(heatmapTileProvider));
+            }
+        } catch (JSONException ex) {
+            Log.e("Martin's Maps", ex.getMessage());
+        }
+    }
+
+    private void requestCrimeData() {
+        int radius = Integer.parseInt(sharedPreferences.getString("radius", "50"));
+        LatLonBoundary boundary = new LatLonBoundary(mLastLocation.getLatitude(), mLastLocation.getLongitude(), radius);
+        String requestUrl = POLICE_URI + "?poly="
+                + boundary.getLatFrom() + "," + boundary.getLonFrom() + ":"
+                + boundary.getLatTo() + "," + boundary.getLonFrom() + ":"
+                + boundary.getLatTo() + "," + boundary.getLonTo() + ":"
+                + boundary.getLatFrom() + "," + boundary.getLonTo() + ":";
+        Log.d("Martin's Map", "Crime URI: " + requestUrl);
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.POST, requestUrl, null, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                addCrimeData(response);
+            }
+        }, (error) -> {
+            Log.e("Martin's Maps", "A network error occurred: " + error.toString());
+            Toast.makeText(getActivity(), "Network error occurred", Toast.LENGTH_SHORT).show();
+        });
+        jsonArrayRequest.setRetryPolicy(new DefaultRetryPolicy(30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        queue.add(jsonArrayRequest);
+    }
+
+    private void addCrimeData(JSONArray array) {
+        try {
+            if (array.length() == 0) {
+                Toast.makeText(getActivity(), "No crime data available", Toast.LENGTH_SHORT).show();
+            } else {
+                // TODO: Replace this with an array to contain crime data.
+//                ArrayList<WeightedLatLng> locations = new ArrayList<>();
+
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject obj = array.getJSONObject(i);
+                    // TODO: Extract the latitude, longitude, and category of crime from returned JSON array.
+                    // Note: Info on this structure can be found here: https://data.police.uk/docs/method/crime-street/
+//                    LatLng loc = new LatLng(obj.getDouble("latitude"), obj.getDouble("longitude"));
+//                    locations.add(new WeightedLatLng(loc, weight));
+                }
+                // TODO: Add all of the crime data-points to the map (cluster?).
             }
         } catch (JSONException ex) {
             Log.e("Martin's Maps", ex.getMessage());
