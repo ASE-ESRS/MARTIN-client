@@ -37,6 +37,8 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.maps.android.clustering.ClusterItem;
+import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.google.maps.android.heatmaps.HeatmapTileProvider.Builder;
 import com.google.maps.android.heatmaps.WeightedLatLng;
@@ -48,6 +50,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 import ase_esrs.martinsmap.ui.activities.MainActivity;
+import util.CrimeClusterItem;
 import util.JSONArrayUtils;
 import util.LatLonBoundary;
 import util.Prices;
@@ -60,6 +63,8 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     private final static String SERVER_URI = "https://4wmuzhlr5b.execute-api.eu-west-2.amazonaws.com/prod/martinServer";
     private final static String POLICE_URI = "https://data.police.uk/api/crimes-street/all-crime";
 
+    public MainActivity mainActivity;
+
     GoogleMap mGoogleMap;
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
@@ -67,6 +72,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     RequestQueue queue;
     SharedPreferences sharedPreferences;
     Marker mCurrLocationMarker;
+    ClusterManager<CrimeClusterItem> mClusterManager;
     Snackbar loadingBar;
 
     @Override
@@ -344,17 +350,21 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
             if (array.length() == 0) {
                 Toast.makeText(getActivity(), "No crime data available", Toast.LENGTH_SHORT).show();
             } else {
-                // TODO: Replace this with an array to contain crime data.
-//                ArrayList<WeightedLatLng> locations = new ArrayList<>();
+                mClusterManager = new ClusterManager<CrimeClusterItem>(mainActivity, mGoogleMap);
 
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject obj = array.getJSONObject(i);
-                    // TODO: Extract the latitude, longitude, and category of crime from returned JSON array.
-                    // Note: Info on this structure can be found here: https://data.police.uk/docs/method/crime-street/
-//                    LatLng loc = new LatLng(obj.getDouble("latitude"), obj.getDouble("longitude"));
-//                    locations.add(new WeightedLatLng(loc, weight));
+
+                    // Extract the location
+                    double latitude = Double.parseDouble(obj.getJSONObject("location").getString("latitude"));
+                    double longitude = Double.parseDouble(obj.getJSONObject("location").getString("longitude"));
+
+                    // Retrieve the crime category.
+                    String category = obj.getString("category");
+
+                    CrimeClusterItem item = new CrimeClusterItem(latitude, longitude, category);
+                    mClusterManager.addItem(item);
                 }
-                // TODO: Add all of the crime data-points to the map (cluster?).
             }
         } catch (JSONException ex) {
             Log.e("Martin's Maps", ex.getMessage());

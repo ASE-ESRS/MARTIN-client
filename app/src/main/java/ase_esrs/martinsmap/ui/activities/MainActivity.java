@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
         queue = Volley.newRequestQueue(this);
 
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map_fragment);
+        mapFragment.mainActivity = this;
 
         EditText postcodeSearchField = (EditText) findViewById(R.id.postcode_field);
         postcodeSearchField.setOnEditorActionListener((view, actionId, event) -> {
