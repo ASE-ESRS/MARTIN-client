@@ -63,8 +63,6 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     private final static String SERVER_URI = "https://4wmuzhlr5b.execute-api.eu-west-2.amazonaws.com/prod/martinServer";
     private final static String POLICE_URI = "https://data.police.uk/api/crimes-street/all-crime";
 
-    public MainActivity mainActivity;
-
     GoogleMap mGoogleMap;
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
@@ -350,14 +348,14 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
             if (array.length() == 0) {
                 Toast.makeText(getActivity(), "No crime data available", Toast.LENGTH_SHORT).show();
             } else {
-                mClusterManager = new ClusterManager<CrimeClusterItem>(mainActivity, mGoogleMap);
+                mClusterManager = new ClusterManager<CrimeClusterItem>(getActivity(), mGoogleMap);
 
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject obj = array.getJSONObject(i);
 
                     // Extract the location
-                    double latitude = Double.parseDouble(obj.getJSONObject("location").getString("latitude"));
-                    double longitude = Double.parseDouble(obj.getJSONObject("location").getString("longitude"));
+                    double latitude = obj.getJSONObject("location").getDouble("latitude");
+                    double longitude = obj.getJSONObject("location").getDouble("latitude");
 
                     // Retrieve the crime category.
                     String category = obj.getString("category");
@@ -365,6 +363,8 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
                     CrimeClusterItem item = new CrimeClusterItem(latitude, longitude, category);
                     mClusterManager.addItem(item);
                 }
+
+                mGoogleMap.setOnCameraIdleListener(mClusterManager);
             }
         } catch (JSONException ex) {
             Log.e("Martin's Maps", ex.getMessage());

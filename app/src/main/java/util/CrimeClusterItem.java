@@ -26,16 +26,14 @@ public class CrimeClusterItem implements ClusterItem {
 
     @Override
     public LatLng getPosition() {
-        return null;
+        return mPosition;
     }
 
     @Override
-    public String getTitle() {
-        return null;
-    }
+    public String getTitle() { return mTitle; }
 
     @Override
     public String getSnippet() {
-        return null;
+        return "";
     }
 }

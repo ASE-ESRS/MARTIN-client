@@ -24,6 +24,7 @@ import org.json.JSONObject;
 
 import ase_esrs.martinsmap.R;
 import ase_esrs.martinsmap.ui.fragments.MapFragment;
+import util.DefaultsManager;
 import util.PostcodeUtils;
 import util.Prices;
 
@@ -49,8 +50,10 @@ public class MainActivity extends AppCompatActivity {
 
         queue = Volley.newRequestQueue(this);
 
+        // Set up default values in persistent storage.
+        DefaultsManager.getInstance(getApplicationContext()).setDefaults();
+
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map_fragment);
-        mapFragment.mainActivity = this;
 
         EditText postcodeSearchField = (EditText) findViewById(R.id.postcode_field);
         postcodeSearchField.setOnEditorActionListener((view, actionId, event) -> {

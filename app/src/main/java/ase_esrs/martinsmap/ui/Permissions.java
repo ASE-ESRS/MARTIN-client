@@ -5,6 +5,6 @@ package ase_esrs.martinsmap.ui;
  */
 
 public interface Permissions {
-    int LOCATION_PERMISSION = 1;
-    int INTERNET_PERMISSION = 2;
+    public static final int LOCATION_PERMISSION = 1;
+    public static final int INTERNET_PERMISSION = 2;
 }
