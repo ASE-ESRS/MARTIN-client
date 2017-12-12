@@ -305,31 +305,32 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     }
 
     private void requestCrimeData() {
-//        int radius = Integer.parseInt(sharedPreferences.getString("radius", "50"));
-//        LatLonBoundary boundary = new LatLonBoundary(mLastLocation.getLatitude(), mLastLocation.getLongitude(), radius);
-//        String requestUrl = POLICE_URI + "?poly="
-//                + boundary.getLatFrom() + "," + boundary.getLonFrom() + ":"
-//                + boundary.getLatTo() + "," + boundary.getLonFrom() + ":"
-//                + boundary.getLatTo() + "," + boundary.getLonTo() + ":"
-//                + boundary.getLatFrom() + "," + boundary.getLonTo() + ":";
-//        Log.d("Martin's Map", "Crime URI: " + requestUrl);
-//
-//        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.POST, requestUrl, null, new Response.Listener<JSONArray>() {
-//            @Override
-//            public void onResponse(JSONArray response) {
-//                addCrimeData(response);
-//            }
-//        }, (error) -> {
-//            Log.e("Martin's Maps", "A network error occurred: " + error.toString());
-//            Toast.makeText(getActivity(), "Network error occurred", Toast.LENGTH_SHORT).show();
-//        });
-//        jsonArrayRequest.setRetryPolicy(new DefaultRetryPolicy(30000,
-//                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-//                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-//        queue.add(jsonArrayRequest);
+        int radius = Integer.parseInt(sharedPreferences.getString("radius", "50"));
+        LatLonBoundary boundary = new LatLonBoundary(lastLocation.latitude, lastLocation.longitude, radius);
+        String requestUrl = POLICE_URI + "?poly="
+                + boundary.getLatFrom() + "," + boundary.getLonFrom() + ":"
+                + boundary.getLatTo() + "," + boundary.getLonFrom() + ":"
+                + boundary.getLatTo() + "," + boundary.getLonTo() + ":"
+                + boundary.getLatFrom() + "," + boundary.getLonTo() + ":";
+        Log.d("Martin's Map", "Crime URI: " + requestUrl);
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.POST, requestUrl, null, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                addCrimeData(response);
+            }
+        }, (error) -> {
+            Log.e("Martin's Maps", "A network error occurred: " + error.toString());
+            Toast.makeText(getActivity(), "Network error occurred", Toast.LENGTH_SHORT).show();
+        });
+        jsonArrayRequest.setRetryPolicy(new DefaultRetryPolicy(30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        queue.add(jsonArrayRequest);
     }
 
     private void addCrimeData(JSONArray array) {
+        System.out.println(array);
 //        try {
 //            if (array.length() == 0) {
 //                Toast.makeText(getActivity(), "No crime data available", Toast.LENGTH_SHORT).show();
