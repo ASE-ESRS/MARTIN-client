@@ -304,6 +304,11 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
         }
     }
 
+    /**
+     * Makes an API request to Police UK to obtain nearby crime data.
+     * Uses the current location and search radius.
+     * @author Loic Verrall
+     */
     private void requestCrimeData() {
         int radius = Integer.parseInt(sharedPreferences.getString("radius", "50"));
         LatLonBoundary boundary = new LatLonBoundary(lastLocation.latitude, lastLocation.longitude, radius);
@@ -329,27 +334,31 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
         queue.add(jsonArrayRequest);
     }
 
+    /**
+     * Responsible for plotting the crime data (received as a JSON array) on the map.
+     * @param array the JSON array of crime data to display.
+     * @author Loic Verrall
+     */
     private void addCrimeData(JSONArray array) {
-        System.out.println(array);
-//        try {
-//            if (array.length() == 0) {
-//                Toast.makeText(getActivity(), "No crime data available", Toast.LENGTH_SHORT).show();
-//            } else {
-//                // TODO: Replace this with an array to contain crime data.
-////                ArrayList<WeightedLatLng> locations = new ArrayList<>();
-//
-//                for (int i = 0; i < array.length(); i++) {
-//                    JSONObject obj = array.getJSONObject(i);
-//                    // TODO: Extract the latitude, longitude, and category of crime from returned JSON array.
-//                    // Note: Info on this structure can be found here: https://data.police.uk/docs/method/crime-street/
-////                    LatLng loc = new LatLng(obj.getDouble("latitude"), obj.getDouble("longitude"));
-////                    locations.add(new WeightedLatLng(loc, weight));
-//                }
-//                // TODO: Add all of the crime data-points to the map (cluster?).
-//            }
-//        } catch (JSONException ex) {
-//            Log.e("Martin's Maps", ex.getMessage());
-//        }
+        try {
+            if (array.length() == 0) {
+                Toast.makeText(getActivity(), "No crime data available", Toast.LENGTH_SHORT).show();
+            } else {
+                // TODO: Replace this with an array to contain crime data.
+//                ArrayList<WeightedLatLng> locations = new ArrayList<>();
+
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject obj = array.getJSONObject(i);
+                    // TODO: Extract the latitude, longitude, and category of crime from returned JSON array.
+                    // Note: Info on this structure can be found here: https://data.police.uk/docs/method/crime-street/
+//                    LatLng loc = new LatLng(obj.getDouble("latitude"), obj.getDouble("longitude"));
+//                    locations.add(new WeightedLatLng(loc, weight));
+                }
+                // TODO: Add all of the crime data-points to the map (cluster?).
+            }
+        } catch (JSONException ex) {
+            Log.e("Martin's Maps", ex.getMessage());
+        }
     }
 
 }

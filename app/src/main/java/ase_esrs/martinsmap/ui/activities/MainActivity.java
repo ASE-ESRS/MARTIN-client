@@ -1,6 +1,5 @@
 package ase_esrs.martinsmap.ui.activities;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
@@ -25,7 +24,6 @@ import org.json.JSONObject;
 
 import ase_esrs.martinsmap.R;
 import ase_esrs.martinsmap.ui.fragments.MapFragment;
-import util.DefaultsManager;
 import util.PostcodeUtils;
 import util.Prices;
 
@@ -34,9 +32,6 @@ import static ase_esrs.martinsmap.ui.Permissions.LOCATION_PERMISSION;
 
 public class MainActivity extends AppCompatActivity {
 
-    // Used as the shared context for the preferences.
-    public static Context applicationContext;
-
     private MapFragment mapsFragment;
     private Toolbar toolbar;
     private RequestQueue queue;
@@ -44,11 +39,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        applicationContext = getApplicationContext();
         setContentView(R.layout.activity_main);
-
-        // Set up default values in persistent storage.
-        DefaultsManager.getInstance(getApplicationContext()).setDefaults();
 
         toolbar = (Toolbar) findViewById(R.id.my_toolbar);
         toolbar.setTitle(R.string.app_name);
@@ -133,6 +124,10 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Presents the in-app Preferences (called when the Settings button (top right) is pressed).
+     * @author Loic Verrall
+     */
     protected void presentSettingsActivity() {
         MainActivity.this.startActivity(new Intent(MainActivity.this, SettingsActivity.class));
     }
