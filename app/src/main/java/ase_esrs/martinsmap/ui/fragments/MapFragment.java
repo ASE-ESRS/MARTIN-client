@@ -19,11 +19,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -46,6 +46,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import ase_esrs.martinsmap.ui.activities.MainActivity;
 import util.JSONArrayUtils;
 import util.LatLonBoundary;
 import util.Prices;
@@ -60,9 +61,11 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     GoogleMap mGoogleMap;
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
+    LatLng lastLocation;
     RequestQueue queue;
     SharedPreferences sharedPreferences;
     Marker mCurrLocationMarker;
+    Snackbar loadingBar;
 
     @Override
     public void onResume() {
@@ -98,8 +101,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
         mGoogleMap.setMapType(sharedPreferences.getBoolean("satelliteDisplayMode", false) ? GoogleMap.MAP_TYPE_HYBRID : GoogleMap.MAP_TYPE_NORMAL);
         mGoogleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(49.82380908513249, -10.8544921875), new LatLng(59.478568831926395, 2.021484375)));
         mGoogleMap.setOnMapLongClickListener((point) -> {
-            mLastLocation.setLatitude(point.latitude);
-            mLastLocation.setLongitude(point.longitude);
+            lastLocation = new LatLng(point.latitude, point.longitude);
             updateMap();
         });
 
@@ -127,6 +129,9 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
 
     @Override
     public void onConnected(Bundle bundle) {
+
+        loadingBar = Snackbar.make(getView(), "Loading House Prices Paid Data...", Snackbar.LENGTH_INDEFINITE);
+
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
         queue = Volley.newRequestQueue(getActivity());
         checkPermission(INTERNET_PERMISSION, Manifest.permission.INTERNET);
@@ -140,6 +145,10 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
                 == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
         }
+
+        // If location not enabled default to Brighton
+        lastLocation = new LatLng(50.8375054,-0.1762299);
+        updateMap();
     }
 
     @Override
@@ -155,22 +164,21 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
         Log.i("Martin's Maps", "Location Updated");
         if (mLastLocation == null) {
             mLastLocation = location;
+            lastLocation = new LatLng(location.getLatitude(), location.getLongitude());
             updateMap();
         }
     }
 
     public void updateMap(double latitude, double longitude) {
-        mLastLocation.setLatitude(latitude);
-        mLastLocation.setLongitude(longitude);
+        lastLocation = new LatLng(latitude, longitude);
         updateMap();
     }
 
     private void updateMap() {
         mGoogleMap.clear();
-        LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(lastLocation, 15));
         MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(latLng);
+        markerOptions.position(lastLocation);
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
         mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
         requestHousePricesPaidData();
@@ -224,7 +232,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
                     }
 
                 } else {
-                    Toast.makeText(getActivity(), "Permission Denied", Toast.LENGTH_LONG).show();
+
                 }
                 break;
             case INTERNET_PERMISSION:
@@ -237,9 +245,9 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     }
 
     private void requestHousePricesPaidData() {
+        loadingBar.show();
         int radius = Integer.parseInt(sharedPreferences.getString("radius", "50"));
-        LatLonBoundary boundary = new LatLonBoundary(mLastLocation.getLatitude(), mLastLocation.getLongitude(), radius);
-        Toast.makeText(getActivity(), "Finding Price Paid Data...", Toast.LENGTH_LONG).show();
+        LatLonBoundary boundary = new LatLonBoundary(lastLocation.latitude, lastLocation.longitude, radius);
         String requestUrl = SERVER_URI + "?start_latitude=" + boundary.getLatFrom()
                 + "&start_longitude=" + boundary.getLonFrom()
                 + "&end_latitude=" + boundary.getLatTo()
@@ -251,10 +259,12 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
             @Override
             public void onResponse(JSONArray response) {
                 addHeatMap(response);
+                loadingBar.dismiss();
             }
         }, (error) -> {
             Log.e("Martin's Maps", "A network error occurred: " + error.toString());
-            Toast.makeText(getActivity(), "Network error occurred", Toast.LENGTH_SHORT).show();
+            loadingBar.dismiss();
+            Snackbar.make(getView(), "A network error occurred.", Snackbar.LENGTH_SHORT).show();
         });
         jsonArrayRequest.setRetryPolicy(new DefaultRetryPolicy(30000,
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
@@ -265,7 +275,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     private void addHeatMap(JSONArray array) {
         try {
             if (array.length() == 0) {
-                Toast.makeText(getActivity(), "No price paid data available", Toast.LENGTH_SHORT).show();
+                Snackbar.make(getView(), "There is no price paid data available for this location.", Snackbar.LENGTH_SHORT).show();
             } else {
                 ArrayList<WeightedLatLng> locations = new ArrayList<>();
                 int min = JSONArrayUtils.getMinPrice(array);
@@ -280,6 +290,11 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
                 Log.d("Martin's Maps", array.toString());
                 HeatmapTileProvider heatmapTileProvider = new Builder().weightedData(locations).build();
                 mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(heatmapTileProvider));
+                if(sharedPreferences.getBoolean("relativePricing", false)) {
+                    ((MainActivity) getActivity()).setHeatmapKey(max, average, min);
+                } else {
+                    ((MainActivity) getActivity()).setHeatmapKey(400000, 262500,125000);
+                }
             }
         } catch (JSONException ex) {
             Log.e("Martin's Maps", ex.getMessage());
