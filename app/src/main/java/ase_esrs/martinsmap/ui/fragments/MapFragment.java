@@ -258,8 +258,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
         String requestUrl = SERVER_URI + "?start_latitude=" + boundary.getLatFrom()
                 + "&start_longitude=" + boundary.getLonFrom()
                 + "&end_latitude=" + boundary.getLatTo()
-                + "&end_longitude=" + boundary.getLonTo()
-                + "&distance=" + radius;
+                + "&end_longitude=" + boundary.getLonTo();
         Log.d("Martin's Map", requestUrl);
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.POST, requestUrl, null, new Response.Listener<JSONArray>() {

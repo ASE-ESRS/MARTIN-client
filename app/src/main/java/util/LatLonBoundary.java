@@ -1,11 +1,22 @@
 package util;
 
+/**
+ * This class computes and stores the coordinates corresponding to a boundary when given a lat,lon pair and radius.
+ * @author Mark and Loic
+ */
 public class LatLonBoundary {
     private double latFrom;
     private double latTo;
     private double lonFrom;
     private double lonTo;
 
+    /**
+     * Calculates the boundary coordinates for an area within the given radius of the provided location.
+     * @param latitude The lat coordinate of the centre point around which to calculate the boundary.
+     * @param longitude The lon coordinate of the centre point around which to calculate the boundary.
+     * @param radius The distance around the lat and lon points for which to define the boundary.
+     * @author Mark and Loic
+     */
     public LatLonBoundary(double latitude, double longitude, int radius) {
         double latChange = Math.abs(radius*(1/(110.574*1000)));
         double lonChange = Math.abs(radius*(1/(111.320*1000)));
