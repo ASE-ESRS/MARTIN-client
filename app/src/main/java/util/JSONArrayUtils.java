@@ -3,7 +3,8 @@ package util;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-public class JSONArrayUtils {
+public interface JSONArrayUtils {
+
     public static int getMinPrice(JSONArray array) throws JSONException {
         int min = array.getJSONObject(0).getInt("price");
         for (int i = 1; i < array.length(); i++) {
@@ -23,10 +24,11 @@ public class JSONArrayUtils {
     }
 
     public static int getAveragePrice(JSONArray array) throws JSONException {
-        int total = 0;
+        long total = 0;
         for (int i = 0; i < array.length(); i++) {
             total += array.getJSONObject(i).getInt("price");
-                    }
-        return total / array.length();
+        }
+        long avg = total / array.length();
+        return (int) avg;
     }
 }
