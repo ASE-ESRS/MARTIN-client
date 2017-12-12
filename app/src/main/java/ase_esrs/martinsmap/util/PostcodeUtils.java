@@ -1,4 +1,4 @@
-package util;
+package ase_esrs.martinsmap.util;
 
 import java.util.regex.Pattern;
 

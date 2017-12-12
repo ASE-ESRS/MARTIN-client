@@ -1,4 +1,4 @@
-package util;
+package ase_esrs.martinsmap.util;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;

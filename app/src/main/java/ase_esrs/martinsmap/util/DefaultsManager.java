@@ -1,10 +1,8 @@
-package util;
+package ase_esrs.martinsmap.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-
-import ase_esrs.martinsmap.ui.activities.SettingsActivity;
 
 public class DefaultsManager {
 

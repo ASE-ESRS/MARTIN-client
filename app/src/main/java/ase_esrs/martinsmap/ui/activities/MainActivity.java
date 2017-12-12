@@ -24,9 +24,9 @@ import org.json.JSONObject;
 
 import ase_esrs.martinsmap.R;
 import ase_esrs.martinsmap.ui.fragments.MapFragment;
-import util.DefaultsManager;
-import util.PostcodeUtils;
-import util.Prices;
+import ase_esrs.martinsmap.util.DefaultsManager;
+import ase_esrs.martinsmap.util.PostcodeUtils;
+import ase_esrs.martinsmap.util.Prices;
 
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
 import static ase_esrs.martinsmap.ui.Permissions.LOCATION_PERMISSION;

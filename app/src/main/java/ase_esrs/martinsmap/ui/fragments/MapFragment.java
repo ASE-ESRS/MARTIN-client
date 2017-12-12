@@ -24,7 +24,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -37,7 +36,6 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlayOptions;
-import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.google.maps.android.heatmaps.HeatmapTileProvider.Builder;
@@ -51,9 +49,9 @@ import java.util.ArrayList;
 
 import ase_esrs.martinsmap.ui.activities.MainActivity;
 import util.CrimeClusterItem;
-import util.JSONArrayUtils;
-import util.LatLonBoundary;
-import util.Prices;
+import ase_esrs.martinsmap.util.JSONArrayUtils;
+import ase_esrs.martinsmap.util.LatLonBoundary;
+import ase_esrs.martinsmap.util.Prices;
 
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
 import static ase_esrs.martinsmap.ui.Permissions.LOCATION_PERMISSION;
@@ -110,6 +108,9 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
             lastLocation = new LatLng(point.latitude, point.longitude);
             updateMap();
         });
+
+        mClusterManager = new ClusterManager<CrimeClusterItem>(getActivity(), mGoogleMap);
+        mGoogleMap.setOnCameraIdleListener(mClusterManager);
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(getActivity(),
@@ -322,14 +323,9 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
                 + boundary.getLatFrom() + "," + boundary.getLonTo() + ":";
         Log.d("Martin's Map", "Crime URI: " + requestUrl);
 
-        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.POST, requestUrl, null, new Response.Listener<JSONArray>() {
-            @Override
-            public void onResponse(JSONArray response) {
-                addCrimeData(response);
-            }
-        }, (error) -> {
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.POST, requestUrl, null, response -> addCrimeData(response), (error) -> {
             Log.e("Martin's Maps", "A network error occurred: " + error.toString());
-            Toast.makeText(getActivity(), "Network error occurred", Toast.LENGTH_SHORT).show();
+            Snackbar.make(getView(), "A network error occurred.", Snackbar.LENGTH_SHORT).show();
         });
         jsonArrayRequest.setRetryPolicy(new DefaultRetryPolicy(30000,
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
@@ -345,16 +341,15 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     private void addCrimeData(JSONArray array) {
         try {
             if (array.length() == 0) {
-                Toast.makeText(getActivity(), "No crime data available", Toast.LENGTH_SHORT).show();
+                Snackbar.make(getView(), "No crime data available.", Snackbar.LENGTH_SHORT).show();
             } else {
-                mClusterManager = new ClusterManager<CrimeClusterItem>(getActivity(), mGoogleMap);
-
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject obj = array.getJSONObject(i);
+                    JSONObject location = obj.getJSONObject("location");
 
                     // Extract the location
-                    double latitude = obj.getJSONObject("location").getDouble("latitude");
-                    double longitude = obj.getJSONObject("location").getDouble("latitude");
+                    double latitude = location.getDouble("latitude");
+                    double longitude = location.getDouble("longitude");
 
                     // Retrieve the crime category.
                     String category = obj.getString("category");
@@ -362,8 +357,6 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
                     CrimeClusterItem item = new CrimeClusterItem(latitude, longitude, category);
                     mClusterManager.addItem(item);
                 }
-
-                mGoogleMap.setOnCameraIdleListener(mClusterManager);
             }
         } catch (JSONException ex) {
             Log.e("Martin's Maps", ex.getMessage());
