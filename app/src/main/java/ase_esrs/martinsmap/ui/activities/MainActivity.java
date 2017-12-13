@@ -70,14 +70,8 @@ public class MainActivity extends AppCompatActivity {
             }
             return false;
         });
-        postcodeSearchField.setOnKeyListener((view, keyCode, keyEvent) -> {
-            if (keyEvent.getAction() == keyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-                // The Enter key has been pressed down.
-                String postcode = postcodeSearchField.getText().toString();
-                postcodeSearch(postcode);
-            }
-            return true;
-        });
+
+        mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map_fragment);
     }
 
     public void postcodeSearch(String postcode) {

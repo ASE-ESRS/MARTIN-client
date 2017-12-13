@@ -347,7 +347,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     private void addCrimeData(JSONArray array) {
         try {
             if (array.length() == 0) {
-                Snackbar.make(getView(), "No crime data available.", Snackbar.LENGTH_SHORT).show();
+                // No crime data available
             } else {
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject obj = array.getJSONObject(i);
