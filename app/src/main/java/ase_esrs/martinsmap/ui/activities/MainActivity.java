@@ -1,14 +1,17 @@
 package ase_esrs.martinsmap.ui.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,9 +36,10 @@ import static ase_esrs.martinsmap.ui.Permissions.LOCATION_PERMISSION;
 
 public class MainActivity extends AppCompatActivity {
 
-    private MapFragment mapsFragment;
+    private MapFragment mapFragment;
     private Toolbar toolbar;
     private RequestQueue queue;
+    EditText postcodeSearchField;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,41 +57,53 @@ public class MainActivity extends AppCompatActivity {
         // Set up default values in persistent storage.
         DefaultsManager.getInstance(getApplicationContext()).setDefaults();
 
-        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map_fragment);
-
-        EditText postcodeSearchField = (EditText) findViewById(R.id.postcode_field);
+        postcodeSearchField = (EditText) findViewById(R.id.postcode_field);
         postcodeSearchField.setOnEditorActionListener((view, actionId, event) -> {
             if(actionId == EditorInfo.IME_ACTION_SEARCH) {
                 String postcode = view.getText().toString();
-                if(PostcodeUtils.isValidPostcode(postcode)) {
-                    postcode = postcode.replaceAll("\\s", "");
-                    String requestUrl = "https://api.postcodes.io/postcodes/"+postcode;
-
-                    JsonObjectRequest jsonArrayRequest = new JsonObjectRequest(Request.Method.GET, requestUrl, null, new Response.Listener<JSONObject>() {
-                        @Override
-                        public void onResponse(JSONObject response) {
-                            try {
-                                if(response.getInt("status") == 200) {
-                                    JSONObject result = response.getJSONObject("result");
-                                    double latitude = result.getDouble("latitude");
-                                    double longitude = result.getDouble("longitude");
-                                    mapFragment.updateMap(latitude, longitude);
-                                } else {
-                                    Toast.makeText(getApplicationContext(), "Postcode could not be searched at this time",  Toast.LENGTH_SHORT);
-                                }
-                            } catch (JSONException e) {
-                                Toast.makeText(getApplicationContext(), "Postcode could not be searched at this time",  Toast.LENGTH_SHORT);
-                            }
-                        }
-                    }, (error) -> {
-                        Toast.makeText(getApplicationContext(), "Postcode could not be searched at this time",  Toast.LENGTH_SHORT);
-                    });
-                    queue.add(jsonArrayRequest);
-                }
+                postcodeSearch(postcode);
                 return true;
             }
             return false;
         });
+        postcodeSearchField.setOnKeyListener((view, keyCode, keyEvent) -> {
+            if (keyEvent.getAction() == keyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+                // The Enter key has been pressed down.
+                String postcode = postcodeSearchField.getText().toString();
+                postcodeSearch(postcode);
+            }
+            return true;
+        });
+    }
+
+    public void postcodeSearch(String postcode) {
+        if(PostcodeUtils.isValidPostcode(postcode)) {
+            postcode = postcode.replaceAll("\\s", "");
+            String requestUrl = "https://api.postcodes.io/postcodes/"+postcode;
+
+            JsonObjectRequest jsonArrayRequest = new JsonObjectRequest(Request.Method.GET, requestUrl, null, response -> {
+                try {
+                    if(response.getInt("status") == 200) {
+                        JSONObject result = response.getJSONObject("result");
+                        double latitude = result.getDouble("latitude");
+                        double longitude = result.getDouble("longitude");
+                        mapFragment.updateMap(latitude, longitude);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Postcode could not be searched at this time",  Toast.LENGTH_SHORT);
+                    }
+                } catch (JSONException e) {
+                    Toast.makeText(getApplicationContext(), "Postcode could not be searched at this time",  Toast.LENGTH_SHORT);
+                }
+            }, (error) -> {
+                Toast.makeText(getApplicationContext(), "Postcode could not be searched at this time",  Toast.LENGTH_SHORT);
+            });
+
+            // Dismiss keyboard.
+            InputMethodManager imm = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(postcodeSearchField.getWindowToken(), 0);
+
+            queue.add(jsonArrayRequest);
+        }
     }
 
     public void setHeatmapKey(int max, int avg, int min) {
@@ -107,10 +123,10 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
             case LOCATION_PERMISSION:
-                mapsFragment.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                mapFragment.onRequestPermissionsResult(requestCode, permissions, grantResults);
                 break;
             case INTERNET_PERMISSION:
-                mapsFragment.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                mapFragment.onRequestPermissionsResult(requestCode, permissions, grantResults);
                 break;
             default:
                 break;
