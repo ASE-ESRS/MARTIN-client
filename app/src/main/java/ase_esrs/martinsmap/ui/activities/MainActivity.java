@@ -34,6 +34,10 @@ import ase_esrs.martinsmap.util.Prices;
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
 import static ase_esrs.martinsmap.ui.Permissions.LOCATION_PERMISSION;
 
+/**
+ * The Main Activity of the app. Contains a map fragment and overlays a postcode search field.
+ * @author Dan and Loic
+ */
 public class MainActivity extends AppCompatActivity {
 
     private MapFragment mapFragment;

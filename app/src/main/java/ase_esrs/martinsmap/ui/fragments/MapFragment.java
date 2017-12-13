@@ -339,8 +339,6 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
         queue.add(jsonArrayRequest);
     }
 
-    String categories = "[{\"url\":\"all-crime\",\"name\":\"All crime\"},{\"url\":\"anti-social-behaviour\",\"name\":\"Anti-social behaviour\"},{\"url\":\"bicycle-theft\",\"name\":\"Bicycle theft\"},{\"url\":\"burglary\",\"name\":\"Burglary\"},{\"url\":\"criminal-damage-arson\",\"name\":\"Criminal damage and arson\"},{\"url\":\"drugs\",\"name\":\"Drugs\"},{\"url\":\"other-theft\",\"name\":\"Other theft\"},{\"url\":\"possession-of-weapons\",\"name\":\"Possession of weapons\"},{\"url\":\"public-order\",\"name\":\"Public order\"},{\"url\":\"robbery\",\"name\":\"Robbery\"},{\"url\":\"shoplifting\",\"name\":\"Shoplifting\"},{\"url\":\"theft-from-the-person\",\"name\":\"Theft from the person\"},{\"url\":\"vehicle-crime\",\"name\":\"Vehicle crime\"},{\"url\":\"violent-crime\",\"name\":\"Violence and sexual offences\"},{\"url\":\"other-crime\",\"name\":\"Other crime\"}]";
-
     /**
      * Responsible for plotting the crime data (received as a JSON array) on the map.
      * @param array the JSON array of crime data to display.
@@ -360,16 +358,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
                     double longitude = location.getDouble("longitude");
 
                     // Retrieve the crime category.
-                    String category = "";
-                    JSONArray categoriesJSON = new JSONArray(categories);
-
-                    for (int j = 0; j < categoriesJSON.length(); j++) {
-                        JSONObject crimeCategory = categoriesJSON.getJSONObject(j);
-                        // Check if this object has the same category.
-                        if (obj.getString("category") == crimeCategory.getString("url")) {
-                            category = crimeCategory.getString("name");
-                        }
-                    }
+                    String category = JSONArrayUtils.getCrimeNameFromCategory(obj.getString("category"));
 
                     CrimeClusterItem item = new CrimeClusterItem(latitude, longitude, category);
                     mClusterManager.addItem(item);
