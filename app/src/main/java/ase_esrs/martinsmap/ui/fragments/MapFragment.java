@@ -48,6 +48,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 import ase_esrs.martinsmap.ui.activities.MainActivity;
+import ase_esrs.martinsmap.util.CrimeClusterRenderer;
 import util.CrimeClusterItem;
 import ase_esrs.martinsmap.util.JSONArrayUtils;
 import ase_esrs.martinsmap.util.LatLonBoundary;
@@ -109,8 +110,10 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
             updateMap();
         });
 
+        // Set up the crime cluster manager.
         mClusterManager = new ClusterManager<CrimeClusterItem>(getActivity(), mGoogleMap);
         mGoogleMap.setOnCameraIdleListener(mClusterManager);
+        mClusterManager.setRenderer(new CrimeClusterRenderer(getActivity(), mGoogleMap, mClusterManager));
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(getActivity(),
