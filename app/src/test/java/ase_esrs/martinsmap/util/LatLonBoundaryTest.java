@@ -32,8 +32,8 @@ public class LatLonBoundaryTest {
         lb = new LatLonBoundary(lat, lon, radius);
         posDouble = 1.8;
         negDouble = -1.8;
-        oorLat = 90.01;
-        oorLon = 180.01;
+        oorLat = -90.01;
+        oorLon = -180.01;
     }
 
     @Test

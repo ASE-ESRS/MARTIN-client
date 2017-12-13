@@ -75,7 +75,7 @@ public class LatLonBoundary {
      * @author Mark
      */
     public boolean checkLatitude(double lat) {
-        return (lat <= Math.abs(90.0));
+        return (Math.abs(lat) <= 90.0);
     }
 
     /**
@@ -85,6 +85,6 @@ public class LatLonBoundary {
      * @author Mark
      */
     public boolean checkLongitude(double lon) {
-        return (lon <= Math.abs(180.0));
+        return (Math.abs(lon) <= 180.0);
     }
 }
