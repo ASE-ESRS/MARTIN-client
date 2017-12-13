@@ -1,4 +1,4 @@
-package util;
+package ase_esrs.martinsmap.util;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -55,5 +55,42 @@ public interface JSONArrayUtils {
         }
         long avg = total / array.length();
         return (int) avg;
+    }
+
+    public static String getCrimeNameFromCategory(String category) {
+        switch (category) {
+            case "all-crime":
+                return "All crime";
+            case "anti-social-behaviour":
+                return "Anti-social behaviour";
+            case "bicycle-theft":
+                return "Bicycle theft";
+            case "burglary":
+                return "Burglary";
+            case "criminal-damage-arson":
+                return "Criminal damage & arson";
+            case "drugs":
+                return "Drugs";
+            case "other-theft":
+                return "Other theft";
+            case "possession-of-weapons":
+                return "Possession of weapons";
+            case "public-order":
+                return "Public order";
+            case "robbery":
+                return "Robbery";
+            case "shoplifting":
+                return "Shoplifting";
+            case "theft-from-the-person":
+                return "Theft from the person";
+            case "vehicle-crime":
+                return "Vehicle crime";
+            case "violent-crime":
+                return "Violence and sexual offences";
+            case "other-crime":
+                return "Other crime";
+            default:
+                return "";
+        }
     }
 }

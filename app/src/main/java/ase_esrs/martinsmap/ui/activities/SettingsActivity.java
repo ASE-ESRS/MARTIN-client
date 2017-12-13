@@ -9,6 +9,10 @@ import android.widget.TextView;
 
 import ase_esrs.martinsmap.R;
 
+/**
+ * Contains the preferences fragment. Allows users to customise the app's behaviour/appearance.
+ * @author Loic Verrall
+ */
 public class SettingsActivity extends AppCompatActivity {
 
     @Override

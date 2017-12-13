@@ -6,10 +6,12 @@ import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,30 +27,28 @@ import org.json.JSONObject;
 
 import ase_esrs.martinsmap.R;
 import ase_esrs.martinsmap.ui.fragments.MapFragment;
-import util.DefaultsManager;
-import util.PostcodeUtils;
-import util.Prices;
+import ase_esrs.martinsmap.util.DefaultsManager;
+import ase_esrs.martinsmap.util.PostcodeUtils;
+import ase_esrs.martinsmap.util.Prices;
 
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
 import static ase_esrs.martinsmap.ui.Permissions.LOCATION_PERMISSION;
 
+/**
+ * The Main Activity of the app. Contains a map fragment and overlays a postcode search field.
+ * @author Dan and Loic
+ */
 public class MainActivity extends AppCompatActivity {
 
-    // Used as the shared context for the preferences.
-    public static Context applicationContext;
-
-    private MapFragment mapsFragment;
+    private MapFragment mapFragment;
     private Toolbar toolbar;
     private RequestQueue queue;
+    EditText postcodeSearchField;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        applicationContext = getApplicationContext();
         setContentView(R.layout.activity_main);
-
-        // Set up default values in persistent storage.
-        DefaultsManager.getInstance(getApplicationContext()).setDefaults();
 
         toolbar = (Toolbar) findViewById(R.id.my_toolbar);
         toolbar.setTitle(R.string.app_name);
@@ -58,41 +58,56 @@ public class MainActivity extends AppCompatActivity {
 
         queue = Volley.newRequestQueue(this);
 
-        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map_fragment);
+        // Set up default values in persistent storage.
+        DefaultsManager.getInstance(getApplicationContext()).setDefaults();
 
-        EditText postcodeSearchField = (EditText) findViewById(R.id.postcode_field);
+        postcodeSearchField = (EditText) findViewById(R.id.postcode_field);
         postcodeSearchField.setOnEditorActionListener((view, actionId, event) -> {
             if(actionId == EditorInfo.IME_ACTION_SEARCH) {
                 String postcode = view.getText().toString();
-                if(PostcodeUtils.isValidPostcode(postcode)) {
-                    postcode = postcode.replaceAll("\\s", "");
-                    String requestUrl = "https://api.postcodes.io/postcodes/"+postcode;
-
-                    JsonObjectRequest jsonArrayRequest = new JsonObjectRequest(Request.Method.GET, requestUrl, null, new Response.Listener<JSONObject>() {
-                        @Override
-                        public void onResponse(JSONObject response) {
-                            try {
-                                if(response.getInt("status") == 200) {
-                                    JSONObject result = response.getJSONObject("result");
-                                    double latitude = result.getDouble("latitude");
-                                    double longitude = result.getDouble("longitude");
-                                    mapFragment.updateMap(latitude, longitude);
-                                } else {
-                                    Toast.makeText(getApplicationContext(), "Postcode could not be searched at this time",  Toast.LENGTH_SHORT);
-                                }
-                            } catch (JSONException e) {
-                                Toast.makeText(getApplicationContext(), "Postcode could not be searched at this time",  Toast.LENGTH_SHORT);
-                            }
-                        }
-                    }, (error) -> {
-                        Toast.makeText(getApplicationContext(), "Postcode could not be searched at this time",  Toast.LENGTH_SHORT);
-                    });
-                    queue.add(jsonArrayRequest);
-                }
+                postcodeSearch(postcode);
                 return true;
             }
             return false;
         });
+        postcodeSearchField.setOnKeyListener((view, keyCode, keyEvent) -> {
+            if (keyEvent.getAction() == keyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+                // The Enter key has been pressed down.
+                String postcode = postcodeSearchField.getText().toString();
+                postcodeSearch(postcode);
+            }
+            return true;
+        });
+    }
+
+    public void postcodeSearch(String postcode) {
+        if(PostcodeUtils.isValidPostcode(postcode)) {
+            postcode = postcode.replaceAll("\\s", "");
+            String requestUrl = "https://api.postcodes.io/postcodes/"+postcode;
+
+            JsonObjectRequest jsonArrayRequest = new JsonObjectRequest(Request.Method.GET, requestUrl, null, response -> {
+                try {
+                    if(response.getInt("status") == 200) {
+                        JSONObject result = response.getJSONObject("result");
+                        double latitude = result.getDouble("latitude");
+                        double longitude = result.getDouble("longitude");
+                        mapFragment.updateMap(latitude, longitude);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Postcode could not be searched at this time",  Toast.LENGTH_SHORT);
+                    }
+                } catch (JSONException e) {
+                    Toast.makeText(getApplicationContext(), "Postcode could not be searched at this time",  Toast.LENGTH_SHORT);
+                }
+            }, (error) -> {
+                Toast.makeText(getApplicationContext(), "Postcode could not be searched at this time",  Toast.LENGTH_SHORT);
+            });
+
+            // Dismiss keyboard.
+            InputMethodManager imm = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(postcodeSearchField.getWindowToken(), 0);
+
+            queue.add(jsonArrayRequest);
+        }
     }
 
     public void setHeatmapKey(int max, int avg, int min) {
@@ -112,10 +127,10 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
             case LOCATION_PERMISSION:
-                mapsFragment.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                mapFragment.onRequestPermissionsResult(requestCode, permissions, grantResults);
                 break;
             case INTERNET_PERMISSION:
-                mapsFragment.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                mapFragment.onRequestPermissionsResult(requestCode, permissions, grantResults);
                 break;
             default:
                 break;
@@ -133,6 +148,10 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Presents the in-app Preferences (called when the Settings button (top right) is pressed).
+     * @author Loic Verrall
+     */
     protected void presentSettingsActivity() {
         MainActivity.this.startActivity(new Intent(MainActivity.this, SettingsActivity.class));
     }

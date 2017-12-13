@@ -1,4 +1,4 @@
-package util;
+package ase_esrs.martinsmap.util;
 
 /**
  * This class computes and stores the coordinates corresponding to a boundary when given a lat,lon pair and radius.

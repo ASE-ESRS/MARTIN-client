@@ -1,9 +1,9 @@
-package util;
+package ase_esrs.martinsmap.util;
 
 import java.util.regex.Pattern;
 
 /**
- * PostcodeUtils provides utlities for working with Postcodes within the application.
+ * PostcodeUtils provides utilities for working with Postcodes within the application.
  * @author Daniel Arthur
  */
 public interface PostcodeUtils {
