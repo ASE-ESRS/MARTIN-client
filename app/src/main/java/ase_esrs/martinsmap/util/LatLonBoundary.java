@@ -45,18 +45,46 @@ public class LatLonBoundary {
     }
 
      public void setLatFrom(double latFrom) {
-        this.latFrom = latFrom;
+        if (checkLatitude(latFrom)) {
+            this.latFrom = latFrom;
+        }
     }
 
      public void setLatTo(double latTo) {
-        this.latTo = latTo;
+         if (checkLatitude(latTo)) {
+             this.latTo = latTo;
+         }
     }
 
      public void setLonFrom(double lonFrom) {
-        this.lonFrom = lonFrom;
+         if (checkLongitude(lonFrom)) {
+             this.lonFrom = lonFrom;
+         }
     }
 
      public void setLonTo(double lonTo) {
-        this.lonTo = lonTo;
+         if (checkLongitude(lonTo)) {
+             this.lonTo = lonTo;
+         }
+    }
+
+    /**
+     * Checks that a given latitude is in range -90 to +90
+     * @param lat A latitude to check is in range
+     * @return Whether or not the given latitude is valid
+     * @author Mark
+     */
+    public boolean checkLatitude(double lat) {
+        return (lat <= Math.abs(90.0));
+    }
+
+    /**
+     * Checks that a given longitude is in range -180 to +180
+     * @param lon A longitude to check is in range
+     * @return Whether or not the given longitude is valid
+     * @author Mark
+     */
+    public boolean checkLongitude(double lon) {
+        return (lon <= Math.abs(180.0));
     }
 }
