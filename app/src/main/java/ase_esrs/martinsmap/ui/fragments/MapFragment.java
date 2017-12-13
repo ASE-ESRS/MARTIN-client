@@ -36,6 +36,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.google.maps.android.heatmaps.HeatmapTileProvider.Builder;
 import com.google.maps.android.heatmaps.WeightedLatLng;
@@ -47,9 +48,11 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 import ase_esrs.martinsmap.ui.activities.MainActivity;
-import util.JSONArrayUtils;
-import util.LatLonBoundary;
-import util.Prices;
+import ase_esrs.martinsmap.util.CrimeClusterItem;
+import ase_esrs.martinsmap.util.CrimeClusterRenderer;
+import ase_esrs.martinsmap.util.JSONArrayUtils;
+import ase_esrs.martinsmap.util.LatLonBoundary;
+import ase_esrs.martinsmap.util.Prices;
 
 import static ase_esrs.martinsmap.ui.Permissions.INTERNET_PERMISSION;
 import static ase_esrs.martinsmap.ui.Permissions.LOCATION_PERMISSION;
@@ -57,6 +60,7 @@ import static ase_esrs.martinsmap.ui.Permissions.LOCATION_PERMISSION;
 public class MapFragment extends com.google.android.gms.maps.MapFragment implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private final static String SERVER_URI = "https://4wmuzhlr5b.execute-api.eu-west-2.amazonaws.com/prod/martinServer";
+    private final static String POLICE_URI = "https://data.police.uk/api/crimes-street/all-crime";
 
     GoogleMap mGoogleMap;
     GoogleApiClient mGoogleApiClient;
@@ -65,6 +69,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     RequestQueue queue;
     SharedPreferences sharedPreferences;
     Marker mCurrLocationMarker;
+    ClusterManager<CrimeClusterItem> mClusterManager;
     Snackbar loadingBar;
 
     @Override
@@ -104,6 +109,11 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
             lastLocation = new LatLng(point.latitude, point.longitude);
             updateMap();
         });
+
+        // Set up the crime cluster manager.
+        mClusterManager = new ClusterManager<CrimeClusterItem>(getActivity(), mGoogleMap);
+        mGoogleMap.setOnCameraIdleListener(mClusterManager);
+        mClusterManager.setRenderer(new CrimeClusterRenderer(getActivity(), mGoogleMap, mClusterManager));
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(getActivity(),
@@ -182,6 +192,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
         mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
         requestHousePricesPaidData();
+        requestCrimeData();
     }
 
     private void checkPermission(final int permissionConstant, final String manifestPermissionConstant) {
@@ -293,6 +304,64 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
                     ((MainActivity) getActivity()).setHeatmapKey(max, average, min);
                 } else {
                     ((MainActivity) getActivity()).setHeatmapKey(400000, 262500,125000);
+                }
+            }
+        } catch (JSONException ex) {
+            Log.e("Martin's Maps", ex.getMessage());
+        }
+    }
+
+    /**
+     * Makes an API request to Police UK to obtain nearby crime data.
+     * Uses the current location and search radius.
+     * @author Loic Verrall
+     */
+    private void requestCrimeData() {
+        // Ensure the Show Crime Data option is turned on.
+        if (sharedPreferences.getBoolean("policeData", true) == false) { return; }
+
+        int radius = Integer.parseInt(sharedPreferences.getString("radius", "50"));
+        LatLonBoundary boundary = new LatLonBoundary(lastLocation.latitude, lastLocation.longitude, radius);
+        String requestUrl = POLICE_URI + "?poly="
+                + boundary.getLatFrom() + "," + boundary.getLonFrom() + ":"
+                + boundary.getLatTo() + "," + boundary.getLonFrom() + ":"
+                + boundary.getLatTo() + "," + boundary.getLonTo() + ":"
+                + boundary.getLatFrom() + "," + boundary.getLonTo() + ":";
+        Log.d("Martin's Map", "Crime URI: " + requestUrl);
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.POST, requestUrl, null, response -> addCrimeData(response), (error) -> {
+            Log.e("Martin's Maps", "A network error occurred: " + error.toString());
+            Snackbar.make(getView(), "A network error occurred.", Snackbar.LENGTH_SHORT).show();
+        });
+        jsonArrayRequest.setRetryPolicy(new DefaultRetryPolicy(30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        queue.add(jsonArrayRequest);
+    }
+
+    /**
+     * Responsible for plotting the crime data (received as a JSON array) on the map.
+     * @param array the JSON array of crime data to display.
+     * @author Loic Verrall
+     */
+    private void addCrimeData(JSONArray array) {
+        try {
+            if (array.length() == 0) {
+                Snackbar.make(getView(), "No crime data available.", Snackbar.LENGTH_SHORT).show();
+            } else {
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject obj = array.getJSONObject(i);
+                    JSONObject location = obj.getJSONObject("location");
+
+                    // Extract the location
+                    double latitude = location.getDouble("latitude");
+                    double longitude = location.getDouble("longitude");
+
+                    // Retrieve the crime category.
+                    String category = JSONArrayUtils.getCrimeNameFromCategory(obj.getString("category"));
+
+                    CrimeClusterItem item = new CrimeClusterItem(latitude, longitude, category);
+                    mClusterManager.addItem(item);
                 }
             }
         } catch (JSONException ex) {

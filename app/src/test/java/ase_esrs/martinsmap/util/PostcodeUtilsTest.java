@@ -1,6 +1,8 @@
-package util;
+package ase_esrs.martinsmap.util;
 
 import org.junit.Test;
+
+import ase_esrs.martinsmap.util.PostcodeUtils;
 
 import static org.junit.Assert.*;
 

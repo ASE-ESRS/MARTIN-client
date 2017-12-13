@@ -1,4 +1,4 @@
-package util;
+package ase_esrs.martinsmap.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
