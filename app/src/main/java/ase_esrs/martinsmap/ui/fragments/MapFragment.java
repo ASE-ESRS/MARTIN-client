@@ -283,9 +283,6 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
     }
 
     private void addHeatMap(JSONArray array) {
-        // Ensure the Show Crime Data option is turned on.
-        if (sharedPreferences.getBoolean("policeData", true) == false) { return; }
-
         try {
             if (array.length() == 0) {
                 Snackbar.make(getView(), "There is no price paid data available for this location.", Snackbar.LENGTH_SHORT).show();
@@ -320,6 +317,9 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment impleme
      * @author Loic Verrall
      */
     private void requestCrimeData() {
+        // Ensure the Show Crime Data option is turned on.
+        if (sharedPreferences.getBoolean("policeData", true) == false) { return; }
+
         int radius = Integer.parseInt(sharedPreferences.getString("radius", "50"));
         LatLonBoundary boundary = new LatLonBoundary(lastLocation.latitude, lastLocation.longitude, radius);
         String requestUrl = POLICE_URI + "?poly="
